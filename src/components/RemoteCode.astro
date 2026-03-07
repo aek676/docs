@@ -1,15 +1,16 @@
 ---
 import { Code } from '@astrojs/starlight/components';
+import type { ComponentProps } from 'astro/types';
 
-interface Props {
+interface Props extends Omit<ComponentProps<typeof Code>, 'code'> {
   url: string;
-  lang?: string;
-  title?: string;
 }
 
-const { url, lang = 'plaintext', title } = Astro.props;
+const { url, ...codeProps } = Astro.props;
 
-const response = await fetch(url);
+const cleanUrl = url.replace(/[<>]/g, '');
+
+const response = await fetch(cleanUrl);
 let codeString = '';
 
 if (response.ok) {
@@ -19,4 +20,4 @@ if (response.ok) {
 }
 ---
 
-<Code code={codeString} lang={lang} title={title} />
+<Code code={codeString} {...codeProps} />

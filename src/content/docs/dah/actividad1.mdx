@@ -79,7 +79,7 @@ async processAndNavigate() {
 
 Se debe crear una aplicación Ionic con las siguientes características:
 
-### 1. El inicio de la aplicación muestra tres pestañas. La que se abre por defecto es la segunda
+#### 3.1. La aplicación debe tener tres pestañas (Clients, Reservations y Products), siendo la segunda pestaña la que se muestra por defecto al iniciar la aplicación
 
 <Steps>
 
@@ -131,48 +131,156 @@ Se debe crear una aplicación Ionic con las siguientes características:
 
 </Steps>
 
-## 4. Implementación de Pestañas con Navegación - myApp
+### 3.2. Los iconos de cada pestaña deben ser representativos del tipo de información que se muestra en cada una
 
-Este documento describe paso a paso cómo se ha implementado el sistema de pestañas con navegación en la aplicación Ionic/Angular.
+<Steps>
 
-### 4.1. Iconos de las Pestañas
+1. Agregar iconos en el HTML
 
-Se utilizan iconos representativos para cada pestaña en `src/app/features/tabs/tabs.page.html`:
+   Modificar `src/app/features/tabs/tabs.page.html` para usar `ion-icon`:
 
-```html
-<ion-tab-button tab="tab1" href="/tabs/tab1">
-  <ion-icon aria-hidden="true" name="people"></ion-icon>
-  <ion-label>Clients</ion-label>
-</ion-tab-button>
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.html"
+     lang="html"
+     title="src/app/features/tabs/tabs.page.html"
+   />
 
-<ion-tab-button tab="tab2" href="/tabs/tab2">
-  <ion-icon aria-hidden="true" name="calendar"></ion-icon>
-  <ion-label>Reservations</ion-label>
-</ion-tab-button>
+2. Importar iconos en el componente
 
-<ion-tab-button tab="tab3" href="/tabs/tab3">
-  <ion-icon aria-hidden="true" name="cube"></ion-icon>
-  <ion-label>Products</ion-label>
-</ion-tab-button>
-```
+   En `tabs.page.ts` importar y registrar los iconos:
 
-**Correspondencia:**
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.ts"
+     lang="typescript"
+     title="src/app/features/tabs/tabs.page.ts"
+   />
 
-| Pestaña     | Icono   | Tipo de información |
-|-------------|---------|---------------------|
-| Clients     | `people`    | Clientes            |
-| Reservations| `calendar`  | Reservas            |
-| Products    | `cube`      | Productos           |
+</Steps>
 
-En el componente `tabs.page.ts` se importan los iconos:
+### 3.3. En Clients, cada ítem de la lista debe usar routerLink para enviar su ID, el cual se recibirá y mostrará en la página de detalle mediante @Input()
 
-```typescript
-import { people, calendar, cube } from 'ionicons/icons';
+<Steps>
 
-constructor() {
-  addIcons({ people, calendar, cube });
-}
-```
+1. Definir datos del componente
+
+   Crear `src/app/features/clients/clients.page.ts` con la interfaz `Client` y el array de ejemplo:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/clients.page.ts"
+     lang="typescript"
+     title="src/app/features/clients/clients.page.ts"
+   />
+
+2. Crear template del listado con routerLink
+
+    En `src/app/features/clients/clients.page.html` usar `[routerLink]` para navegar al detalle:
+
+    <RemoteCode
+      url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/clients.page.html>"
+      lang="html"
+      title="src/app/features/clients/clients.page.html"
+      mark={['[routerLink]']}
+    />
+
+3. Crear página de detalle con `@Input`
+
+   En `src/app/features/clients/client-detail.page.ts` usar el decorador `@Input()` para recibir el ID:
+
+   <RemoteCode
+     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/client-detail.page.ts>"
+     lang="typescript"
+     title="src/app/features/clients/client-detail.page.ts"
+     mark={['@Input() id?: string;']}
+   />
+
+4. Crear template del detalle
+
+   En `src/app/features/clients/client-detail.page.html` mostrar el ID recibido:
+
+   <RemoteCode
+     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/client-detail.page.html>"
+     lang="html"
+     title="src/app/features/clients/client-detail.page.html"
+     mark={['<h2>Cliente ID: {{ id }}</h2>']}
+   />
+
+</Steps>
+
+### 3.4. Pestaña Reservations - Listado y Crear
+
+<Steps>
+
+1. Definir datos del componente
+
+   Crear `src/app/features/reservations/reservations.page.ts` con la interfaz `Reservation` y el array de ejemplo:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/reservations/reservations.page.ts"
+     lang="typescript"
+     title="src/app/features/reservations/reservations.page.ts"
+   />
+
+2. Navegación con navCtrl.navigateForward
+
+   En el componente TypeScript, inyectar `NavController` y crear la función `createReservation()`:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/reservations/reservations.page.ts"
+     lang="typescript"
+     title="src/app/features/reservations/reservations.page.ts"
+     mark={['NavController', 'createReservation()', 'navigateForward']}
+   />
+
+3. Template del listado con botón
+
+   En `src/app/features/reservations/reservations.page.html` usar `ion-list` y el botón:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/reservations/reservations.page.html"
+     lang="html"
+     title="src/app/features/reservations/reservations.page.html"
+     mark={['createReservation()']}
+   />
+
+</Steps>
+
+### 3.5. Pestaña Products - Listado y Cerrar Sesión
+
+<Steps>
+
+1. Definir datos del componente
+
+   Crear `src/app/features/products/products.page.ts` con la interfaz `Product` y el array de ejemplo:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/products/products.page.ts"
+     lang="typescript"
+     title="src/app/features/products/products.page.ts"
+   />
+
+2. Cerrar Sesión con router.navigate
+
+   En el componente TypeScript, inyectar `Router` y crear la función `logout()` que limpie `localStorage` y navegue a `/login`:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/products/products.page.ts"
+     lang="typescript"
+     title="src/app/features/products/products.page.ts"
+     mark={['Router', 'logout()', 'router.navigate']}
+   />
+
+3. Template del listado con botón de logout
+
+   En `src/app/features/products/products.page.html`:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/products/products.page.html"
+     lang="html"
+     title="src/app/features/products/products.page.html"
+     mark={['logout()']}
+   />
+
+</Steps>
 
 ### 4.2. Estructura de Rutas
 
@@ -212,249 +320,7 @@ export const routes: Routes = [
 ];
 ```
 
-### 4.3. Pestaña Clients - Listado y Detalle
-
-#### Página de Listado (clients.page.ts)
-
-Se define una interfaz `Client` y un array de ejemplo:
-
-```typescript
-interface Client {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-}
-
-clients: Client[] = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+1 234 567 890' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+1 234 567 891' },
-  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', phone: '+1 234 567 892' },
-  { id: 4, name: 'Alice Brown', email: 'alice@example.com', phone: '+1 234 567 893' },
-  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', phone: '+1 234 567 894' },
-];
-```
-
-#### Template del Listado (clients.page.html)
-
-Se utiliza la directiva `routerLink` para navegar al detalle de cada cliente:
-
-```html
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button></ion-back-button>
-    </ion-buttons>
-    <ion-title>Clients</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item *ngFor="let client of clients" [routerLink]="['/tabs/client', client.id]">
-      <ion-label>
-        <h2>{{ client.name }}</h2>
-        <p>{{ client.email }}</p>
-        <p>{{ client.phone }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
-</ion-content>
-```
-
-**Clave:** `[routerLink]="['/tabs/client', client.id]"` pasa el ID del cliente como parámetro de ruta.
-
-#### Página de Detalle (client-detail.page.ts)
-
-Se utiliza **exclusivamente** el decorador `@Input()` para recibir el ID:
-
-```typescript
-import { Component, Input } from '@angular/core';
-
-@Component({
-  selector: 'app-client-detail',
-  templateUrl: 'client-detail.page.html',
-  styleUrls: ['client-detail.page.scss'],
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon],
-})
-export class ClientDetailPage {
-  @Input() id?: string;
-
-  constructor() {
-    addIcons({ arrowBack });
-  }
-
-  goBack() {
-    window.history.back();
-  }
-}
-```
-
-#### Template del Detalle (client-detail.page.html)
-
-```html
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-button (click)="goBack()" fill="clear">
-        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-    <ion-title>Client Details</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true">
-  <div class="detail-container">
-    <h2>Cliente ID: {{ id }}</h2>
-  </div>
-</ion-content>
-```
-
-### 4.4. Pestaña Reservations - Listado y Crear
-
-#### Página de Listado (reservations.page.ts)
-
-Interfaz y datos de ejemplo:
-
-```typescript
-interface Reservation {
-  id: number;
-  clientName: string;
-  service: string;
-  date: string;
-  time: string;
-}
-
-reservations: Reservation[] = [
-  { id: 1, clientName: 'John Doe', service: 'Haircut', date: '2024-03-15', time: '10:00 AM' },
-  { id: 2, clientName: 'Jane Smith', service: 'Manicure', date: '2024-03-15', time: '2:00 PM' },
-  { id: 3, clientName: 'Bob Johnson', service: 'Massage', date: '2024-03-16', time: '11:30 AM' },
-  { id: 4, clientName: 'Alice Brown', service: 'Facial', date: '2024-03-16', time: '3:00 PM' },
-  { id: 5, clientName: 'Charlie Wilson', service: 'Hair Color', date: '2024-03-17', time: '9:00 AM' },
-];
-```
-
-#### Navegación con navCtrl.navigateForward
-
-Se inyecta `NavController` y se crea una función que navega al formulario:
-
-```typescript
-import { NavController } from '@ionic/angular/standalone';
-
-@Component({
-  selector: 'app-reservations',
-  // ...
-})
-export class ReservationsPage {
-  constructor(private navCtrl: NavController) { }
-
-  createReservation() {
-    this.navCtrl.navigateForward('/tabs/reservations/create');
-  }
-}
-```
-
-#### Template (reservations.page.html)
-
-```html
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button></ion-back-button>
-    </ion-buttons>
-    <ion-title>Reservations</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item *ngFor="let reservation of reservations">
-      <ion-label>
-        <h2>{{ reservation.clientName }}</h2>
-        <p>{{ reservation.service }} - {{ reservation.date }} {{ reservation.time }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
-
-  <ion-button expand="block" (click)="createReservation()">Nueva Reserva</ion-button>
-</ion-content>
-```
-
-### 4.5. Pestaña Products - Listado y Cerrar Sesión
-
-#### Página de Listado (products.page.ts)
-
-Interfaz y datos de ejemplo:
-
-```typescript
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  description: string;
-}
-
-products: Product[] = [
-  { id: 1, name: 'Shampoo', price: 15.99, description: 'Professional hair shampoo' },
-  { id: 2, name: 'Conditioner', price: 16.99, description: 'Deep conditioning treatment' },
-  { id: 3, name: 'Hair Oil', price: 24.99, description: 'Argan oil for hair care' },
-  { id: 4, name: 'Face Mask', price: 12.99, description: 'Hydrating facial treatment' },
-  { id: 5, name: 'Body Lotion', price: 18.99, description: 'Moisturizing body lotion' },
-];
-```
-
-#### Cerrar Sesión con router.navigate
-
-Se inyecta `Router` y se implementa el logout:
-
-```typescript
-import { Router } from '@angular/router';
-
-@Component({
-  selector: 'app-products',
-  // ...
-})
-export class ProductsPage {
-  private router = inject(Router);
-
-  logout() {
-    localStorage.clear();
-    this.router.navigate(['/login']);
-  }
-}
-```
-
-#### Template (products.page.html)
-
-```html
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button></ion-back-button>
-    </ion-buttons>
-    <ion-title>Products</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item *ngFor="let product of products">
-      <ion-label>
-        <h2>{{ product.name }}</h2>
-        <p>${{ product.price }}</p>
-        <p>{{ product.description }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
-
-  <ion-button expand="block" color="danger" (click)="logout()" class="logout-btn">
-    Cerrar Sesión
-  </ion-button>
-</ion-content>
-```
-
-### 4.6. Página de Login
+### 4.4. Página de Login
 
 La página de login está fuera de las pestañas y permite acceder a la aplicación:
 
