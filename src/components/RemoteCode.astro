@@ -1,0 +1,22 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+interface Props {
+  url: string;
+  lang?: string;
+  title?: string;
+}
+
+const { url, lang = 'plaintext', title } = Astro.props;
+
+const response = await fetch(url);
+let codeString = '';
+
+if (response.ok) {
+  codeString = await response.text();
+} else {
+  codeString = `// Error al cargar el archivo remoto desde: ${url}`;
+}
+---
+
+<Code code={codeString} lang={lang} title={title} />

@@ -1,0 +1,475 @@
+---
+title: Actividad 1
+description: En esta actividad se va a desarrollar las diferentes formas de navegar.
+---
+
+import { Steps, Code } from '@astrojs/starlight/components';
+import RemoteCode from '@/components/RemoteCode.astro';
+
+## 1. Introducción
+
+En esta actividad se va a desarrollar las diferentes formas de navegar entre páginas
+en una aplicación Ionic. La navegación es un aspecto fundamental en el
+desarrollo de aplicaciones móviles, ya que permite a los usuarios moverse entre
+diferentes vistas y funcionalidades de la aplicación.
+
+## 2. Tipos de Navegación
+
+### 2.1. NavController (Recomendado para Ionic)
+
+Es la forma más común para aplicaciones móviles, porque de forma
+automática se encarga de gestionar la pila de navegación, lo que facilita la
+implementación de transiciones y animaciones entre páginas. Además,
+es compatible con las características específicas de Ionic, como el manejo de
+gestos y la integración con componentes nativos.
+
+```typescript
+import { NavController } from '@ionic/angular/standalone';
+
+constructor(private navCtrl: NavController) {}
+
+goToDetails() {
+  this.navCtrl.navigateForward('/details');
+}
+```
+
+### 2.2. RouterLink (Navegación Declarativa)
+
+Se utiliza directamente en las etiquetas HTML para crear enlaces de navegación.
+Es una forma más declarativa de manejar la navegación, ya que se basa en la
+estructura del DOM. Es útil para casos simples donde no se requiere
+una gestión compleja de la pila de navegación.
+
+```html
+<ion-button routerLink="/new-page">Go to New Page</ion-button>
+
+<ion-button [routerLink]="['/new-page', productId]">See Product</ion-button>
+```
+
+### 2.3. Router.navigate (Navegación Programática de Angular)
+
+Es la forma nativa de Angular para manejar la navegación. Permite una mayor
+flexibilidad y control sobre la navegación. Es útil para casos donde se
+requiere lógica adicional antes de navegar a una nueva página,
+como puede ser hacer una llamada a una API o cuando trabajamos en servicios donde
+no tenemos acceso a NavController.
+
+```typescript
+import { Router } from '@angular/router';
+
+constructor(private router: Router) {}
+
+async processAndNavigate() {
+  await this.myService.saveData();
+  this.router.navigate(['/new-page', this.id], {
+    queryParams: { mode: 'edit' },
+  });
+}
+```
+
+### 2.4. Resumen de métodos de navegación
+
+| Método        | Uso Principal          | Ventaja Móvil                                |
+|---------------|------------------------|----------------------------------------------|
+| NavController | Lógica en el .ts      | Control total de animaciones y Stack         |
+| RouterLink    | Directamente en el .html | Más rápido de implementar y leer          |
+| Router        | Lógica compleja o Servicios | Estándar de Angular, compatible con Guards |
+
+## 3. Ejercicio
+
+Se debe crear una aplicación Ionic con las siguientes características:
+
+### 1. El inicio de la aplicación muestra tres pestañas. La que se abre por defecto es la segunda
+
+<Steps>
+
+1. Crear el template HTML
+
+    Crear o modificar el archivo `tabs.page.html` con el componente `ion-tabs`:
+
+    <RemoteCode
+      url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.html"
+      lang="html"
+      title="src/app/features/tabs/tabs.page.html"
+    />
+
+2. Definir las rutas
+
+    Crear el archivo `tabs.routes.ts` con la configuración de rutas:
+
+    <RemoteCode
+      url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.routes.ts"
+      lang="typescript"
+      title="src/app/features/tabs/tabs.routes.ts"
+    />
+
+3. Configurar las pestañas por defecto
+
+    La pestaña por defecto se configura mediante **redirección del router**:
+
+    <Code
+      code={`
+   {
+      path: '',
+      redirectTo: '/tabs/tab2',
+      pathMatch: 'full',
+      }
+      `}
+      lang="typescript"
+      title="src/app/features/tabs/tabs.routes.ts"
+    />
+
+4. Crear el componente TypeScript
+
+    Crear el archivo `tabs.page.ts`:
+
+    <RemoteCode
+      url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.ts"
+      lang="typescript"
+      title="src/app/features/tabs/tabs.page.ts"
+    />
+
+</Steps>
+
+## 4. Implementación de Pestañas con Navegación - myApp
+
+Este documento describe paso a paso cómo se ha implementado el sistema de pestañas con navegación en la aplicación Ionic/Angular.
+
+### 4.1. Iconos de las Pestañas
+
+Se utilizan iconos representativos para cada pestaña en `src/app/features/tabs/tabs.page.html`:
+
+```html
+<ion-tab-button tab="tab1" href="/tabs/tab1">
+  <ion-icon aria-hidden="true" name="people"></ion-icon>
+  <ion-label>Clients</ion-label>
+</ion-tab-button>
+
+<ion-tab-button tab="tab2" href="/tabs/tab2">
+  <ion-icon aria-hidden="true" name="calendar"></ion-icon>
+  <ion-label>Reservations</ion-label>
+</ion-tab-button>
+
+<ion-tab-button tab="tab3" href="/tabs/tab3">
+  <ion-icon aria-hidden="true" name="cube"></ion-icon>
+  <ion-label>Products</ion-label>
+</ion-tab-button>
+```
+
+**Correspondencia:**
+
+| Pestaña     | Icono   | Tipo de información |
+|-------------|---------|---------------------|
+| Clients     | `people`    | Clientes            |
+| Reservations| `calendar`  | Reservas            |
+| Products    | `cube`      | Productos           |
+
+En el componente `tabs.page.ts` se importan los iconos:
+
+```typescript
+import { people, calendar, cube } from 'ionicons/icons';
+
+constructor() {
+  addIcons({ people, calendar, cube });
+}
+```
+
+### 4.2. Estructura de Rutas
+
+Las rutas se configuran en `src/app/app.routes.ts` y `src/app/features/tabs/tabs.routes.ts`.
+
+#### app.routes.ts
+
+```typescript
+export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./features/login/login.page').then((m) => m.LoginPage),
+  },
+  {
+    path: '',
+    loadChildren: () => import('./features/tabs/tabs.routes').then((m) => m.routes),
+  },
+];
+```
+
+#### tabs.routes.ts
+
+```typescript
+export const routes: Routes = [
+  {
+    path: 'tabs',
+    loadComponent: () => import('./tabs.page').then((m) => m.TabsPage),
+    children: [
+      { path: 'tab1', loadComponent: () => import('../clients/clients.page').then((m) => m.ClientsPage) },
+      { path: 'tab2', loadComponent: () => import('../reservations/reservations.page').then((m) => m.ReservationsPage) },
+      { path: 'tab3', loadComponent: () => import('../products/products.page').then((m) => m.ProductsPage) },
+      { path: 'client/:id', loadComponent: () => import('../clients/client-detail.page').then((m) => m.ClientDetailPage) },
+      { path: 'reservations/create', loadComponent: () => import('../reservations/reservation-form.page').then((m) => m.ReservationFormPage) },
+      { path: '', redirectTo: '/tabs/tab2', pathMatch: 'full' },
+    ],
+  },
+];
+```
+
+### 4.3. Pestaña Clients - Listado y Detalle
+
+#### Página de Listado (clients.page.ts)
+
+Se define una interfaz `Client` y un array de ejemplo:
+
+```typescript
+interface Client {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+clients: Client[] = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+1 234 567 890' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+1 234 567 891' },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', phone: '+1 234 567 892' },
+  { id: 4, name: 'Alice Brown', email: 'alice@example.com', phone: '+1 234 567 893' },
+  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', phone: '+1 234 567 894' },
+];
+```
+
+#### Template del Listado (clients.page.html)
+
+Se utiliza la directiva `routerLink` para navegar al detalle de cada cliente:
+
+```html
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>Clients</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list>
+    <ion-item *ngFor="let client of clients" [routerLink]="['/tabs/client', client.id]">
+      <ion-label>
+        <h2>{{ client.name }}</h2>
+        <p>{{ client.email }}</p>
+        <p>{{ client.phone }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>
+```
+
+**Clave:** `[routerLink]="['/tabs/client', client.id]"` pasa el ID del cliente como parámetro de ruta.
+
+#### Página de Detalle (client-detail.page.ts)
+
+Se utiliza **exclusivamente** el decorador `@Input()` para recibir el ID:
+
+```typescript
+import { Component, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-client-detail',
+  templateUrl: 'client-detail.page.html',
+  styleUrls: ['client-detail.page.scss'],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon],
+})
+export class ClientDetailPage {
+  @Input() id?: string;
+
+  constructor() {
+    addIcons({ arrowBack });
+  }
+
+  goBack() {
+    window.history.back();
+  }
+}
+```
+
+#### Template del Detalle (client-detail.page.html)
+
+```html
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()" fill="clear">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Client Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="detail-container">
+    <h2>Cliente ID: {{ id }}</h2>
+  </div>
+</ion-content>
+```
+
+### 4.4. Pestaña Reservations - Listado y Crear
+
+#### Página de Listado (reservations.page.ts)
+
+Interfaz y datos de ejemplo:
+
+```typescript
+interface Reservation {
+  id: number;
+  clientName: string;
+  service: string;
+  date: string;
+  time: string;
+}
+
+reservations: Reservation[] = [
+  { id: 1, clientName: 'John Doe', service: 'Haircut', date: '2024-03-15', time: '10:00 AM' },
+  { id: 2, clientName: 'Jane Smith', service: 'Manicure', date: '2024-03-15', time: '2:00 PM' },
+  { id: 3, clientName: 'Bob Johnson', service: 'Massage', date: '2024-03-16', time: '11:30 AM' },
+  { id: 4, clientName: 'Alice Brown', service: 'Facial', date: '2024-03-16', time: '3:00 PM' },
+  { id: 5, clientName: 'Charlie Wilson', service: 'Hair Color', date: '2024-03-17', time: '9:00 AM' },
+];
+```
+
+#### Navegación con navCtrl.navigateForward
+
+Se inyecta `NavController` y se crea una función que navega al formulario:
+
+```typescript
+import { NavController } from '@ionic/angular/standalone';
+
+@Component({
+  selector: 'app-reservations',
+  // ...
+})
+export class ReservationsPage {
+  constructor(private navCtrl: NavController) { }
+
+  createReservation() {
+    this.navCtrl.navigateForward('/tabs/reservations/create');
+  }
+}
+```
+
+#### Template (reservations.page.html)
+
+```html
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>Reservations</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list>
+    <ion-item *ngFor="let reservation of reservations">
+      <ion-label>
+        <h2>{{ reservation.clientName }}</h2>
+        <p>{{ reservation.service }} - {{ reservation.date }} {{ reservation.time }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" (click)="createReservation()">Nueva Reserva</ion-button>
+</ion-content>
+```
+
+### 4.5. Pestaña Products - Listado y Cerrar Sesión
+
+#### Página de Listado (products.page.ts)
+
+Interfaz y datos de ejemplo:
+
+```typescript
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+}
+
+products: Product[] = [
+  { id: 1, name: 'Shampoo', price: 15.99, description: 'Professional hair shampoo' },
+  { id: 2, name: 'Conditioner', price: 16.99, description: 'Deep conditioning treatment' },
+  { id: 3, name: 'Hair Oil', price: 24.99, description: 'Argan oil for hair care' },
+  { id: 4, name: 'Face Mask', price: 12.99, description: 'Hydrating facial treatment' },
+  { id: 5, name: 'Body Lotion', price: 18.99, description: 'Moisturizing body lotion' },
+];
+```
+
+#### Cerrar Sesión con router.navigate
+
+Se inyecta `Router` y se implementa el logout:
+
+```typescript
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-products',
+  // ...
+})
+export class ProductsPage {
+  private router = inject(Router);
+
+  logout() {
+    localStorage.clear();
+    this.router.navigate(['/login']);
+  }
+}
+```
+
+#### Template (products.page.html)
+
+```html
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>Products</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list>
+    <ion-item *ngFor="let product of products">
+      <ion-label>
+        <h2>{{ product.name }}</h2>
+        <p>${{ product.price }}</p>
+        <p>{{ product.description }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" color="danger" (click)="logout()" class="logout-btn">
+    Cerrar Sesión
+  </ion-button>
+</ion-content>
+```
+
+### 4.6. Página de Login
+
+La página de login está fuera de las pestañas y permite acceder a la aplicación:
+
+```typescript
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-login',
+  // ...
+})
+export class LoginPage {
+  private router = inject(Router);
+
+  login() {
+    this.router.navigate(['/tabs']);
+  }
+}
+```
