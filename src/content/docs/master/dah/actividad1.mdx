@@ -1,75 +1,75 @@
 ---
 title: Actividad 1
-description: En esta actividad se va a desarrollar las diferentes formas de navegar.
+description: En esta actividad se van a desarrollar las diferentes formas de navegar.
 ---
 
 import { Steps, Code, Tabs, TabItem } from '@astrojs/starlight/components';
 import { Image } from 'astro:assets';
-import { LoginImg, ClientsImg, ReservationImg, ProductsImg } from '@/assets/dah/actividad1';
+import { LoginImg, ClientsImg, ReservationImg, ProductsImg, ClientDetailImg, ReservationFormImg } from '@/assets/dah/actividad1';
 import RemoteCode from '@/components/RemoteCode.astro';
 
-## 1. Introducción
-
-En esta actividad se va a desarrollar las diferentes formas de navegar entre páginas
+En esta actividad se van a desarrollar las diferentes formas de navegar entre páginas
 en una aplicación Ionic. La navegación es un aspecto fundamental en el
 desarrollo de aplicaciones móviles, ya que permite a los usuarios moverse entre
 diferentes vistas y funcionalidades de la aplicación.
 
-## 2. Tipos de Navegación
+## 1. Tipos de Navegación
 
-### 2.1. NavController (Recomendado para Ionic)
+<Tabs>
+  <TabItem label="NavController">
+    Es la forma más común para aplicaciones móviles, ya que se encarga
+    automáticamente de gestionar la pila de navegación, lo que facilita la
+    implementación de transiciones y animaciones entre páginas. Además,
+    es compatible con las características específicas de Ionic, como el manejo de
+    gestos y la integración con componentes nativos.
 
-Es la forma más común para aplicaciones móviles, porque de forma
-automática se encarga de gestionar la pila de navegación, lo que facilita la
-implementación de transiciones y animaciones entre páginas. Además,
-es compatible con las características específicas de Ionic, como el manejo de
-gestos y la integración con componentes nativos.
+    ```typescript
+    import { NavController } from '@ionic/angular/standalone';
 
-```typescript
-import { NavController } from '@ionic/angular/standalone';
+    constructor(private navCtrl: NavController) {}
 
-constructor(private navCtrl: NavController) {}
+    goToDetails() {
+      this.navCtrl.navigateForward('/details');
+    }
+    ```
+  </TabItem>
 
-goToDetails() {
-  this.navCtrl.navigateForward('/details');
-}
-```
+  <TabItem label="RouterLink">
+    Se utiliza directamente en las etiquetas HTML para crear enlaces de navegación.
+    Es una forma más declarativa de manejar la navegación, ya que se basa en la
+    estructura del DOM. Es útil para casos simples donde no se requiere
+    una gestión compleja de la pila de navegación.
 
-### 2.2. RouterLink (Navegación Declarativa)
+    ```html
+    <ion-button routerLink="/new-page">Go to New Page</ion-button>
 
-Se utiliza directamente en las etiquetas HTML para crear enlaces de navegación.
-Es una forma más declarativa de manejar la navegación, ya que se basa en la
-estructura del DOM. Es útil para casos simples donde no se requiere
-una gestión compleja de la pila de navegación.
+    <ion-button [routerLink]="['/new-page', productId]">See Product</ion-button>
+    ```
+  </TabItem>
 
-```html
-<ion-button routerLink="/new-page">Go to New Page</ion-button>
+  <TabItem label="Router.navigate">
+    Es la forma nativa de Angular para manejar la navegación. Permite una mayor
+    flexibilidad y control sobre la navegación. Es útil para casos donde se
+    requiere lógica adicional antes de navegar a una nueva página,
+    como puede ser hacer una llamada a una API o cuando trabajamos en servicios donde
+    no tenemos acceso a NavController.
 
-<ion-button [routerLink]="['/new-page', productId]">See Product</ion-button>
-```
+    ```typescript
+    import { Router } from '@angular/router';
 
-### 2.3. Router.navigate (Navegación Programática de Angular)
+    constructor(private router: Router) {}
 
-Es la forma nativa de Angular para manejar la navegación. Permite una mayor
-flexibilidad y control sobre la navegación. Es útil para casos donde se
-requiere lógica adicional antes de navegar a una nueva página,
-como puede ser hacer una llamada a una API o cuando trabajamos en servicios donde
-no tenemos acceso a NavController.
+    async processAndNavigate() {
+      await this.myService.saveData();
+      this.router.navigate(['/new-page', this.id], {
+        queryParams: { mode: 'edit' },
+      });
+    }
+    ```
+  </TabItem>
+</Tabs>
 
-```typescript
-import { Router } from '@angular/router';
-
-constructor(private router: Router) {}
-
-async processAndNavigate() {
-  await this.myService.saveData();
-  this.router.navigate(['/new-page', this.id], {
-    queryParams: { mode: 'edit' },
-  });
-}
-```
-
-### 2.4. Resumen de métodos de navegación
+### 1.1. Resumen de métodos de navegación
 
 | Método        | Uso Principal          | Ventaja Móvil                                |
 |---------------|------------------------|----------------------------------------------|
@@ -77,11 +77,54 @@ async processAndNavigate() {
 | RouterLink    | Directamente en el .html | Más rápido de implementar y leer          |
 | Router        | Lógica compleja o Servicios | Estándar de Angular, compatible con Guards |
 
-## 3. Ejercicio
+## 2. Ejercicio
 
 Se debe crear una aplicación Ionic con las siguientes características:
 
-#### 3.1. La aplicación debe tener tres pestañas (Clients, Reservations y Products), siendo la segunda pestaña la que se muestra por defecto al iniciar la aplicación
+### 2.1. Configuración del Login y Rutas Principales
+
+Configurar las rutas principales de la aplicación y la pantalla inicial de inicio de sesión que se muestra fuera del sistema de pestañas.
+
+<Steps>
+
+1. Página de Login fuera de las pestañas
+
+   La página de Login se encuentra **fuera de las pestañas** gracias a la configuración
+   de rutas en `src/app/app.routes.ts`:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/app.routes.ts"
+     lang="typescript"
+     title="src/app/app.routes.ts"
+   />
+
+   **Explicación:**
+   - La ruta por defecto `path: ''` y la ruta `path: 'login'` cargan el componente Login directamente como ruta raíz.
+   - La ruta `path: 'tabs'` carga el sistema de pestañas junto con todas sus rutas hijas.
+
+2. Componente Login
+
+   La página de Login se encuentra en `src/app/features/login/login.page.ts`:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/login/login.page.ts"
+     lang="typescript"
+     title="src/app/features/login/login.page.ts"
+   />
+
+   Y su template en `src/app/features/login/login.page.html`:
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/login/login.page.html"
+     lang="html"
+     title="src/app/features/login/login.page.html"
+   />
+
+</Steps>
+
+### 2.2. Configuración de Pestañas
+
+Configurar la estructura base de la aplicación con tres pestañas (Clients, Reservations y Products), estableciendo la segunda como la vista por defecto al iniciar.
 
 <Steps>
 
@@ -133,7 +176,9 @@ Se debe crear una aplicación Ionic con las siguientes características:
 
 </Steps>
 
-### 3.2. Los iconos de cada pestaña deben ser representativos del tipo de información que se muestra en cada una
+### 2.3. Iconos Representativos
+
+Añadir y configurar iconos adecuados en el HTML para representar visualmente el contenido de cada pestaña.
 
 <Steps>
 
@@ -159,7 +204,9 @@ Se debe crear una aplicación Ionic con las siguientes características:
 
 </Steps>
 
-### 3.3. En Clients, cada ítem de la lista debe usar routerLink para enviar su ID, el cual se recibirá y mostrará en la página de detalle mediante @Input()
+### 2.4. Navegación a Detalles (Clients)
+
+Implementar la navegación desde la lista de clientes hacia una página de detalle utilizando routerLink, enviando el ID del cliente para recibirlo mediante el decorador @Input().
 
 <Steps>
 
@@ -208,7 +255,9 @@ Se debe crear una aplicación Ionic con las siguientes características:
 
 </Steps>
 
-### 3.4. Pestaña Reservations - Listado y Crear
+### 2.5. Pestaña Reservations (Listado y Creación)
+
+Desarrollar la vista de reservas incluyendo un listado de datos de prueba y la funcionalidad para navegar a un formulario de creación utilizando NavController.
 
 <Steps>
 
@@ -246,7 +295,9 @@ Se debe crear una aplicación Ionic con las siguientes características:
 
 </Steps>
 
-### 3.5. Pestaña Products - Listado y Cerrar Sesión
+### 2.6. Pestaña Products (Listado y Logout)
+
+Mostrar un listado de productos e implementar la lógica de cerrar sesión.
 
 <Steps>
 
@@ -282,44 +333,11 @@ Se debe crear una aplicación Ionic con las siguientes características:
      mark={['logout()']}
    />
 
-4. Página de Login fuera de las pestañas
-
-   La página de Login se encuentra **fuera de las pestañas** gracias a la configuración
-   de rutas en `src/app/app.routes.ts`:
-
-   <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/app.routes.ts"
-     lang="typescript"
-     title="src/app/app.routes.ts"
-   />
-
-   **Explicación:**
-   - La primera ruta `path: 'login'` carga el componente Login directamente como ruta raíz
-   - La segunda ruta `path: ''` carga las pestañas con todas sus páginas children
-   - Cuando el usuario hace logout (`this.router.navigate(['/login'])`), navega a la ruta raíz `/login`
-   - Esta ruta NO es un child de tabs, por lo que se muestra sin la barra de pestañas
-
-5. Componente Login
-
-   La página de Login se encuentra en `src/app/features/login/login.page.ts`:
-
-   <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/login/login.page.ts"
-     lang="typescript"
-     title="src/app/features/login/login.page.ts"
-   />
-
-   Y su template en `src/app/features/login/login.page.html`:
-
-   <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/login/login.page.html"
-     lang="html"
-     title="src/app/features/login/login.page.html"
-   />
-
 </Steps>
 
-### 3.6. Estilos personalizados (Bearnie Theme)
+### 2.7. Diseño Personalizado
+
+Integrar un diseño personalizado y adaptarlas a los componentes de Ionic.
 
 <Steps>
 
@@ -375,9 +393,9 @@ Se debe crear una aplicación Ionic con las siguientes características:
 
 </Steps>
 
-## 4. Ejecución y Funcionamiento
+## 3. Ejecución y Funcionamiento
 
-### 4.1. Pasos de ejecución
+### 3.1. Pasos de ejecución
 
 <Steps>
 
@@ -421,7 +439,7 @@ Se debe crear una aplicación Ionic con las siguientes características:
 
 </Steps>
 
-### 4.2. Estructura y descripción de pantallas
+### 3.2. Estructura y descripción de pantallas
 
 La aplicación está compuesta por las siguientes pantallas:
 
@@ -441,6 +459,8 @@ La aplicación está compuesta por las siguientes pantallas:
   cliente mediante `@Input()` y muestra la información del cliente seleccionado. Incluye
   un botón de retroceso (`ion-back-button`) para volver al listado.
 
+  <Image src={ClientDetailImg} alt="Detalle de cliente" width={330} style="display: block; margin: 1rem auto 0;"/>
+
 - **Reservations (Pestaña 2)**: Es la pestaña por defecto al iniciar la aplicación. Muestra
   un listado de reservas con el nombre del cliente, la fecha y el servicio. Incluye un botón
   "Crear Reserva" que utiliza `navCtrl.navigateForward` para navegar al formulario de creación.
@@ -450,13 +470,15 @@ La aplicación está compuesta por las siguientes pantallas:
 - **Formulario de Reserva**: Página accesible desde la pestaña de reservas. Contiene un
   formulario para crear una nueva reserva.
 
+  <Image src={ReservationFormImg} alt="Formulario de reserva" width={330} style="display: block; margin: 1rem auto 0;"/>
+
 - **Products (Pestaña 3)**: Muestra un listado de productos con su nombre, precio y descripción.
   Al final de la lista se encuentra el botón "Cerrar Sesión" de color rojo que permite salir
   de la aplicación.
 
   <Image src={ProductsImg} alt="Listado de productos" width={330} style="display: block; margin: 1rem auto 0;"/>
 
-### 4.3. Flujo de navegación
+### 3.3. Flujo de navegación
 
 El flujo principal de la aplicación es el siguiente:
 
