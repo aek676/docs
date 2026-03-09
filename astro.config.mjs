@@ -24,6 +24,10 @@ export default defineConfig({
             {
               label: 'Desarrollo de Aplicaciones Híbridas',
               autogenerate: { directory: 'master/dah' },
+            },
+            {
+              label: 'Desarrollo web basado en servicios y componentes',
+              autogenerate: { directory: 'master/dwsc' },
             }
           ]
         }
