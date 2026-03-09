@@ -2,5 +2,99 @@
 title: Actividad 1 - Componentes, mediación y configuraciones.
 description: En esta actividad se trabajará con componentes, mediación y configuraciones en el contexto de DWSC.
 ---
+El objetivo de esta actividad es profundizar en el concepto de arquitectura de software
+basada en servicios y componentes, especificamente en el proceso de selección de componentes
+y mediación a partir de una arquitectura de referencia.
 
+## 1. Caso de estudio
 
+### 1.1. Descripción del problema
+
+Los sistemas de traducción básicos que traducen palabra por palabra suelen generar textos con errores
+ortográficos, falta de contexto y una gramática incorrecta.
+El sistema propuesto procesar texto de manera integral para ofrecer traducciones precisas y naturales.
+Para lograrlo, el sistema no solo debe sustituir palabras, sino que necesita corregir errores previos en
+el texto original, buscar los términos más adecuados según el contexto y aplicar las reglas sintácticas
+correctas del idioma de destino, todo esto soportando múltiples idiomas de forma dinámica.
+
+### 1.2. Arquitectura
+
+El sistema principal, encapsulado bajo el componente compuesto Sistema Avanzado de Traducción,
+se divide en los siguientes elementos funcionales:
+
+- **Traductor Central (Orquestador):** Actúa como el núcleo de control. Expone
+la interfaz principal Traducción hacia el exterior (por ejemplo, a una API o
+interfaz de usuario). Su función es coordinar el flujo de datos, delegando
+las tareas de procesamiento a los componentes especializados y ensamblando
+el resultado final.
+
+- **Corrector Ortográfico:** Provee la interfaz Revisión Ortográfica. Actúa
+en la fase de preprocesamiento, limpiando y corrigiendo el texto de origen
+para garantizar que los errores tipográficos no comprometan la calidad de la traducción.
+
+- **Diccionario Léxico:** Provee la interfaz Sugerencias. Recibe las palabras o
+frases limpias y consulta sus equivalencias, devolviendo las opciones más
+adecuadas según el contexto semántico.
+
+- **Analizador Gramatical:** Provee la interfaz Reglas de Sintaxis. Se encarga
+del postprocesamiento. Toma las sugerencias del diccionario y las ordena
+conjugando verbos y ajustando concordancias (género, número, estructura)
+para que la oración resultante suene natural en el idioma de destino.
+
+- **Base de Datos de Idiomas:** Constituye la capa de persistencia estática.
+Expone la interfaz Paquetes de Idioma. A diferencia de los demás, este
+componente no es consumido por el orquestador, sino que alimenta de datos
+directamente al Diccionario Léxico (vocabulario) y al Analizador Gramatical
+(reglas estructurales).
+
+Se ha diseñado el siguiente diagrama de componentes en UML utilizando la
+herramienta PlantUML, donde se aprecian las interfaces proporcionadas y
+requeridas que conectan los módulos del traductor.
+
+La arquitectura del Traductor Inteligente se estructura a partir de sus
+componentes, definiéndolos según las funcionalidades que aportan y las
+dependencias que necesitan para operar.
+
+$C = (R, \bar{R})$, donde:
+
+- $R = \{R_1, \dots, R_N\}$: Servicios proporcionados
+- $\bar{R} = \{\bar{R}_1, \dots, \bar{R}_N\}$: Servicios requeridos
+
+**Arquitectura del Sistema ($A$)**
+
+| Componente | Servicios Proporcionados ($R$) | Servicios Requeridos ($\bar{R}$) |
+| :--- | :--- | :--- |
+| **Traductor Central** | $R_{TC}$ | $\bar{R}_{CO}$, $\bar{R}_{DL}$, $\bar{R}_{AG}$ |
+| **Corrector Ortográfico** | $R_{CO}$ | - |
+| **Diccionario Léxico** | $R_{DL}$ | $\bar{R}_{BD}$ |
+| **Analizador Gramatical** | $R_{AG}$ | $\bar{R}_{BD}$ |
+| **Base de Datos Idiomas** | $R_{BD}$ | - |
+
+### 1.3. Componentes candidatos
+
+Para satisfacer la arquitectura propuesta, se define un conjunto de componentes
+candidatos que representan el catálogo de software disponible para la composición.
+Estos candidatos presentan diversas agrupaciones de servicios, algunos cubriendo
+múltiples necesidades arquitectónicas y otros siendo específicos para una sola tarea.
+Se incluye una dependencia externa a una API en la nube ($\bar{R}_{API}$) para
+evaluar la detección de dependencias no contempladas.
+
+$C_\beta(A)$: Componentes candidatos
+
+- $C_1 = \{ R_{TC}, \bar{R}_{CO}, \bar{R}_{DL}, \bar{R}_{AG} \}$
+- $C_1 = \{ R_{CO}, R_{DL}, \bar{R}_{BD} \}$
+- $C_3 = \{ R_{BD} \}$
+- $C_4 = \{ R_{AG}, \bar{R}_{API} \}$
+- $C_5 = \{ R_{DL}, \bar{R}_{BD} \}$
+- $C_6 = \{ R_{AG}, \bar{R}_{BD} \}$
+- $C_7 = \{ R_{CO} \}$
+
+## 2. Desarrollo del programa
+
+### 2.1. Propuestas de mejora
+
+### 2.2. Ejemplo de uso y vistas de la web
+
+## 3. Configuración y resultados
+
+## Anexo
