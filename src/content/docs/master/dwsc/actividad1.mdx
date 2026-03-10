@@ -2,8 +2,17 @@
 title: Actividad 1 - Componentes, mediación y configuraciones.
 description: En esta actividad se trabajará con componentes, mediación y configuraciones en el contexto de DWSC.
 ---
+
+import { FileTree, Code } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import RemoteCode from '@/components/RemoteCode.astro';
+import architectureImg from '@/assets/dwsc/Architecture.png';
+import componentsImg from '@/assets/dwsc/Components.png';
+import summaryImg from '@/assets/dwsc/Summary.png';
+import resultImg from '@/assets/dwsc/Result.png';
+
 El objetivo de esta actividad es profundizar en el concepto de arquitectura de software
-basada en servicios y componentes, especificamente en el proceso de selección de componentes
+basada en servicios y componentes, específicamente en el proceso de selección de componentes
 y mediación a partir de una arquitectura de referencia.
 
 ## 1. Caso de estudio
@@ -12,10 +21,10 @@ y mediación a partir de una arquitectura de referencia.
 
 Los sistemas de traducción básicos que traducen palabra por palabra suelen generar textos con errores
 ortográficos, falta de contexto y una gramática incorrecta.
-El sistema propuesto procesar texto de manera integral para ofrecer traducciones precisas y naturales.
-Para lograrlo, el sistema no solo debe sustituir palabras, sino que necesita corregir errores previos en
-el texto original, buscar los términos más adecuados según el contexto y aplicar las reglas sintácticas
-correctas del idioma de destino, todo esto soportando múltiples idiomas de forma dinámica.
+El sistema propuesto procesa el texto de manera integral para ofrecer traducciones precisas y naturales.
+Para lograrlo, el sistema no solo debe sustituir palabras, sino que también necesita corregir errores previos
+en el texto original, buscar los términos más adecuados según el contexto y aplicar las reglas sintácticas
+correctas del idioma de destino, todo ello con soporte dinámico para múltiples idiomas.
 
 ### 1.2. Arquitectura
 
@@ -51,6 +60,8 @@ Se ha diseñado el siguiente diagrama de componentes en UML utilizando la
 herramienta PlantUML, donde se aprecian las interfaces proporcionadas y
 requeridas que conectan los módulos del traductor.
 
+![Diagrama de Arquitectura del Sistema de Traducción](https://www.plantuml.com/plantuml/png/RPAnJWCn44HxVyKe5KqQwYWAIIGK2Gb4A6bMTvl8uiuEQnyA83w6affFo8znn8bZMrTwtypjU7mpvqbyrpRAlMYp8w4MbMrtrh3nQ__UC7fuhPGsdcL35MFq95HtLQKFlsO4SbY5WHQbeXNuL802ukJiyrQmwCz2pGYJIUJJASWXQdBhmehmqNeltcxbyBtHbHtmHs7kN-e-hpKaskBkyBCVDYUgt7vZgD4VL5l1hL1BNbU3wIFCxNDoZ9gn96_TiwaPgrhRbjp09-RB4rCAI4fVTriMDfKc5qfF1hdoaT-q-t-Sj2iAfYCZAGtRfeSrOzrFQQzF6ywdNFr0hnrxTeZN2EhpN2bSNX7ZRZTEVX2a7GTON2G-OA19ubXk86cyM5f0bon0dcPyLUmhO5nNWdHRUOiUnurfpe9ygHcRkckRFm00?)
+
 La arquitectura del Traductor Inteligente se estructura a partir de sus
 componentes, definiéndolos según las funcionalidades que aportan y las
 dependencias que necesitan para operar.
@@ -82,7 +93,7 @@ evaluar la detección de dependencias no contempladas.
 $C_\beta(A)$: Componentes candidatos
 
 - $C_1 = \{ R_{TC}, \bar{R}_{CO}, \bar{R}_{DL}, \bar{R}_{AG} \}$
-- $C_1 = \{ R_{CO}, R_{DL}, \bar{R}_{BD} \}$
+- $C_2 = \{ R_{CO}, \bar{R}_{BD} \}$
 - $C_3 = \{ R_{BD} \}$
 - $C_4 = \{ R_{AG}, \bar{R}_{API} \}$
 - $C_5 = \{ R_{DL}, \bar{R}_{BD} \}$
@@ -91,10 +102,134 @@ $C_\beta(A)$: Componentes candidatos
 
 ## 2. Desarrollo del programa
 
-### 2.1. Propuestas de mejora
+En esta sección se describe el programa desarrollado para la actividad,
+con el fin de obtener todas las configuraciones que satisfacen los requisitos planteados.
 
-### 2.2. Ejemplo de uso y vistas de la web
+### 2.1. Implementación de la API de TraderConfigs
+
+Se ha implementado una API REST que actúa como interfaz entre el cliente y el binario `TraderConfigs`.
+Esta transforma solicitudes JSON al formato esperado por el ejecutable y devuelve
+las configuraciones generadas mediante Python y FastAPI.
+
+#### Estructura del Proyecto
+
+<FileTree>
+- api/
+  - bin/
+    - TraderConfigs (binario ejecutable)
+  - main.py
+  - requirements.txt
+  - Dockerfile
+  - .dockerignore
+</FileTree>
+
+#### Código y Explicación
+
+<RemoteCode url="https://raw.githubusercontent.com/aek676/traderconfigs/main/api/main.py" lang="python" title="api/main.py" />
+
+El programa define una API REST con dos endpoints: uno de verificación de estado (`GET /`) y otro principal (`POST /generate-configurations`).
+Utiliza modelos Pydantic para validar la estructura de los datos de entrada y salida.
+Las funciones auxiliares `to_text` y `from_text` transforman los datos entre JSON y
+el formato de texto plano que el binario `TraderConfigs` puede procesar. El flujo de ejecución
+crea archivos temporales, ejecuta el binario y, posteriormente, procesa los resultados obtenidos.
+
+#### Entradas
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `components` | `Array` | Lista de componentes del sistema |
+| `architecture` | `Array` | Servicios disponibles |
+
+Cada componente:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `index` | `Integer` | Identificador único |
+| `offered` | `Array` | Servicios que ofrece |
+| `required` | `Array` | Servicios que requiere |
+
+#### Salidas
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `single_configurations` | `Array` | Configuraciones válidas |
+| `long_configurations` | `Array` | Todas las combinaciones |
+
+#### Ejemplo
+
+En el siguiente ejemplo se utilizan identificadores simplificados de servicios con fines ilustrativos.
+
+**Request:**
+
+```json
+{
+  "components": [
+    {"index": 1, "offered": ["CIO"], "required": []},
+    {"index": 2, "offered": ["CAL"], "required": []}
+  ],
+  "architecture": ["CAL", "CIO"]
+}
+```
+
+**Response:**
+
+```json
+{
+  "single_configurations": [{"C1": ["CIO"], "C2": ["CAL"]}],
+  "long_configurations": [{"C1": ["CIO"]}, {"C1": ["CIO"], "C2": ["CAL"]}]
+}
+```
+
+### 2.2. Vista web y ejemplo de uso
+
+Para la interfaz web se han desarrollado cuatro vistas, de las cuales dos
+corresponden a formularios.
+
+Formulario de entrada de datos, en el que se introduce la arquitectura:
+
+<Image src={architectureImg} alt="Formulario de entrada de arquitectura" loading="lazy" />
+
+Otro formulario de datos, en el que se introducen los componentes con sus servicios ofrecidos y requeridos:
+
+<Image src={componentsImg} alt="Formulario de componentes con servicios ofrecidos y requeridos" loading="lazy" />
+
+Después, se presenta un resumen de la arquitectura y de los componentes introducidos:
+
+<Image src={summaryImg} alt="Resumen de arquitectura y componentes introducidos" loading="lazy" />
+
+Finalmente, se muestra una vista con los resultados obtenidos, en la que se presentan las configuraciones válidas y todas las combinaciones posibles:
+
+<Image src={resultImg} alt="Resultados con configuraciones válidas y combinaciones posibles" loading="lazy" />
 
 ## 3. Configuración y resultados
 
+Tras la ejecución de la aplicación con el algoritmo de `TraderConfigs`,
+se obtienen las siguientes configuraciones válidas:
+
+| # | C1 | C2 | C3 | C4 | C5 | C6 | C7 | R | C |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Traductor_Central | Corrector_Ortografico | BBDD_Idiomas | Analizador_Gramatical | Diccionario_Lexico | - | - | Sí | No |
+| 2 | Traductor_Central | Corrector_Ortografico | BBDD_Idiomas | - | Diccionario_Lexico | Analizador_Gramatical | - | Sí | Sí |
+| 3 | Traductor_Central | - | BBDD_Idiomas | Analizador_Gramatical | Diccionario_Lexico | - | Corrector_Ortografico | Sí | No |
+| 4 | Traductor_Central | - | BBDD_Idiomas | - | Diccionario_Lexico | Analizador_Gramatical | Corrector_Ortografico | Sí | Sí |
+
+Para evaluar qué configuraciones son válidas, se revisan dos criterios clave:
+
+1. **Configuraciones cerradas (columna C):**
+Una configuración es cerrada cuando ninguno de sus componentes depende de servicios externos a la arquitectura definida.
+En este caso, las configuraciones que incluyen `C4` no son cerradas, porque ese candidato necesita un servicio externo (API) que no forma parte de la arquitectura del sistema de traducción.
+Por eso, en la tabla aparecen como cerradas las configuraciones **#2 y #4**, mientras que **#1 y #3** no lo son.
+
+2. **Respeto de la arquitectura (columna R):**
+Una configuración respeta la arquitectura si los servicios proporcionados por los candidatos pueden asignarse a los servicios exigidos por el diseño original (`Traductor_Central`, `Analizador_Gramatical`, `Corrector_Ortografico`, `Diccionario_Lexico` y `BBDD_Idiomas`).
+En las cuatro configuraciones obtenidas se cumple esta condición, por lo que todas presentan `R = Sí`.
+
+Atendiendo a estos dos criterios, las configuraciones más adecuadas son **#2 y #4**, ya que son las únicas que cumplen simultáneamente que **respetan la arquitectura** y, además, son **cerradas**.
+
 ## Anexo
+
+La actividad se ha desarrollado en el siguiente repositorio de GitHub,
+donde puede encontrarse el código completo junto con instrucciones adicionales
+de ejecución:
+
+[github.com/aek676/traderconfigs](https://github.com/aek676/traderconfigs)
