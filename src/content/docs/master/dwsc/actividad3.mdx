@@ -7,6 +7,7 @@ import { Code, Steps, Aside } from '@astrojs/starlight/components';
 import RemoteCode from '@/components/RemoteCode.astro';
 
 export const raw = `https://raw.githubusercontent.com/aek676/dwsc-2026/main/actividad3/`;
+export const oldRaw = `https://raw.githubusercontent.com/aek676/dwsc-2026/9b4b69667317d38e282ca184a75f6b66c3e9b686/actividad3/`
 
 El objetivo de esta actividad es implementar un servicio RESTful utilizando
 Java, Jersey y WildFly. El servicio permitirá leer y añadir usuarios dando
@@ -75,7 +76,7 @@ a pasar a crear el proyecto de ejemplo de esta actividad.
       getter y setter automáticamente.
     </Aside>
 
-2. Creamos la entidad Uesrs:
+2. Creamos la entidad Users:
 
     También creamos una clase para mostrar los datos de un conjunto
     de usuarios.
@@ -84,6 +85,58 @@ a pasar a crear el proyecto de ejemplo de esta actividad.
      url={`${raw}src/main/java/sampleproject/domain/Users.java`}
      lang="java"
      title="src/main/java/sampleproject/domain/Users.java"
+    />
+
+3. Creamos el servicio UserService:
+
+    Ahora creamos el servicio donde están tanto los controladores como la
+    conexión a la base de datos, tal como se muestra en el siguiente código:
+
+    <RemoteCode
+      url={`${oldRaw}src/main/java/sampleproject/service/UserService.java`}
+      lang="java"
+      title="src/main/java/sampleproject/service/UserService.java"
+    />
+
+4. Generamos el artefacto war:
+
+    Para generar el artefacto war, se ha utilizado el siguiente comando:
+
+    ```bash
+    mvn clean package
+    ```
+
+</Steps>
+
+## 3. Ejecución del proyecto
+
+Pasamos explicar la ejecución del proyecto, para ello se va a utilizar
+WildFly como servidor de aplicaciones y PostgreSQL como base de datos.
+Todo esto en un docker-compose para facilitar la ejecución.
+
+<Steps>
+
+1. Inicialización de la base de datos.
+
+    Creamos un script SQL para inicializar la base de datos:
+
+    <RemoteCode
+      url={`${raw}init.sql`}
+      lang="sql"
+      title="init.sql"
+    />
+
+2. Creamos el docker-compose:
+
+    Para facilitar la ejecución del proyecto, se ha creado un archivo
+    `docker-compose.yml` para levantar tanto el servidor de
+    aplicaciones, pasandole el `.war` como la base de datos,
+    pasando el `init.sql`
+
+    <RemoteCode
+      url={`${raw}docker-compose.yml`}
+      lang="yaml"
+      title="docker-compose.yml"
     />
 
 </Steps>
