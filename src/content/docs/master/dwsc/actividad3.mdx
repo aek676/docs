@@ -1,0 +1,89 @@
+---
+title: Actividad 3 - Desarrollo de un servicio web RESTful
+description: En esta actividad se implementara un servicio RESTful con Java, Jersey y WildFly.
+---
+
+import { Code, Steps, Aside } from '@astrojs/starlight/components';
+import RemoteCode from '@/components/RemoteCode.astro';
+
+export const raw = `https://raw.githubusercontent.com/aek676/dwsc-2026/main/actividad3/`;
+
+El objetivo de esta actividad es implementar un servicio RESTful utilizando
+Java, Jersey y WildFly. El servicio permitirá leer y añadir usuarios dando
+como resultado un JSON o un XML (legacy).
+
+## 1. Inicialización del proyecto inicial
+
+Para desarrollar la actividad se va a utilizar un proyecto Maven,
+además de configurar Jersey para crear el servicio RESTful y WildFly
+para el servidor del servicio. Procedemos a explicar la actividad:
+
+<Steps>
+
+1. Inicialización del proyecto Maven:
+  
+    Se ha inicializado un proyecto Maven con utilizando el siguiente comando con packaging war:
+
+    ```bash
+    mvn archetype:generate -DgroupId=es.ual -DartifactId=actividad3 -DarchetypeArtifactId=maven-archetype-webapp -Dpackaging=war -DinteractiveMode=false
+    ```
+
+2. Modificar web.xml:
+
+    Tenemos que modificar el acrhivo `web.xml` para definiar el servlet
+    de Jersey, además de configurar el mapeo a `/api/*` y indicar donde
+
+   <RemoteCode
+     url={`${raw}src/main/webapp/WEB-INF/web.xml`}
+     lang="xml"
+     title="src/app/main/webapp/WEB-INF/web.xml"
+   />
+
+3. Modificar pom.xml:
+
+    Para incluir las dependencias necesarias para el proyecto, se ha modificado
+    el archivo `pom.xml` para incluir las dependencias que se van a necesitar.
+
+    <RemoteCode
+     url={`${raw}pom.xml`}
+     lang="xml"
+     title="pom.xml"
+    />
+
+</Steps>
+
+## 2. Creación del proyecto ejemplo
+
+Tras haber inicializado y configurado el proyecto, vamos
+a pasar a crear el proyecto de ejemplo de esta actividad.
+
+<Steps>
+
+1. Creamos la entidad User:
+
+    Para poder acceder a la la estructura de datos de los usuarios, se ha
+    creado la clase `User` con los siguientes atributos:
+
+    <RemoteCode
+     url={`${raw}src/main/java/sampleproject/domain/User.java`}
+     lang="java"
+     title="src/main/java/sampleproject/domain/User.java"
+    />
+
+    <Aside>
+      Utilizamos `@Getter` y `@Setter` de Lombok para generar los métodos
+      getter y setter automáticamente.
+    </Aside>
+
+2. Creamos la entidad Uesrs:
+
+    También creamos una clase para mostrar los datos de un conjunto
+    de usuarios.
+
+    <RemoteCode
+     url={`${raw}src/main/java/sampleproject/domain/Users.java`}
+     lang="java"
+     title="src/main/java/sampleproject/domain/Users.java"
+    />
+
+</Steps>
