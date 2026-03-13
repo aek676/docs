@@ -1,6 +1,6 @@
 ---
 title: Actividad 3 - Desarrollo de un servicio web RESTful
-description: En esta actividad se implementara un servicio RESTful con Java, Jersey y WildFly.
+description: En esta actividad se implementará un servicio RESTful con Java, Jersey y WildFly.
 ---
 
 import { Code, Steps, Aside } from '@astrojs/starlight/components';
@@ -13,43 +13,45 @@ export const oldRaw = `https://raw.githubusercontent.com/aek676/dwsc-2026/9b4b69
 
 El objetivo de esta actividad es implementar un servicio RESTful utilizando
 Java, Jersey y WildFly. El servicio permitirá leer y añadir usuarios dando
-como resultado un JSON o un XML (legacy).
+como resultado respuestas en JSON y, por compatibilidad, también en XML.
 
-## 1. Inicialización del proyecto inicial
+## 1. Inicialización del proyecto
 
-Para desarrollar la actividad se va a utilizar un proyecto Maven,
-además de configurar Jersey para crear el servicio RESTful y WildFly
-para el servidor del servicio. Procedemos a explicar la actividad:
+Para desarrollar la actividad se utilizará un proyecto Maven. Además,
+configuraremos Jersey para exponer el servicio RESTful y WildFly como
+servidor de aplicaciones.
 
 <Steps>
 
-1. Inicialización del proyecto Maven:
-  
-    Se ha inicializado un proyecto Maven con utilizando el siguiente comando con packaging war:
+1. Inicialización del proyecto Maven
+
+    Se crea un proyecto Maven con empaquetado `war` usando el siguiente
+    comando:
 
     ```bash
     mvn archetype:generate -DgroupId=es.ual -DartifactId=actividad3 -DarchetypeArtifactId=maven-archetype-webapp -Dpackaging=war -DinteractiveMode=false
     ```
 
-2. Modificar web.xml:
+2. Modificar web.xml
 
-    Tenemos que modificar el acrhivo `web.xml` para definiar el servlet
-    de Jersey, además de configurar el mapeo a `/api/*` y indicar donde
-
-   <RemoteCode
-     url={`${raw}src/main/webapp/WEB-INF/web.xml`}
-     lang="xml"
-     title="src/app/main/webapp/WEB-INF/web.xml"
-   />
-
-3. Modificar pom.xml:
-
-    Para incluir las dependencias necesarias para el proyecto, se ha modificado
-    el archivo `pom.xml` para incluir las dependencias que se van a necesitar.
+    A continuación, se modifica el archivo `web.xml` para definir el
+    servlet de Jersey, mapear las rutas bajo `/api/*` e indicar el paquete
+    donde se encuentran los recursos REST.
 
     <RemoteCode
-     url={`${raw}pom.xml`}
-     lang="xml"
+      url={`${raw}src/main/webapp/WEB-INF/web.xml`}
+      lang="xml"
+      title="src/main/webapp/WEB-INF/web.xml"
+    />
+
+3. Modificar pom.xml
+
+    Después, se actualiza el archivo `pom.xml` para añadir las dependencias
+    necesarias del proyecto.
+
+     <RemoteCode
+      url={`${raw}pom.xml`}
+      lang="xml"
      title="pom.xml"
     />
 
@@ -57,19 +59,19 @@ para el servidor del servicio. Procedemos a explicar la actividad:
 
 ## 2. Creación del proyecto ejemplo
 
-Tras haber inicializado y configurado el proyecto, vamos
-a pasar a crear el proyecto de ejemplo de esta actividad.
+Una vez inicializado y configurado el proyecto, se crean las clases y el
+servicio de ejemplo que formarán la API.
 
 <Steps>
 
-1. Creamos la entidad User:
+1. Creamos la entidad User
 
-    Para poder acceder a la la estructura de datos de los usuarios, se ha
-    creado la clase `User` con los siguientes atributos:
+    Para representar la estructura de datos de cada usuario, se crea la
+    clase `User` con los atributos necesarios:
 
-    <RemoteCode
-     url={`${raw}src/main/java/sampleproject/domain/User.java`}
-     lang="java"
+     <RemoteCode
+      url={`${raw}src/main/java/sampleproject/domain/User.java`}
+      lang="java"
      title="src/main/java/sampleproject/domain/User.java"
     />
 
@@ -78,31 +80,31 @@ a pasar a crear el proyecto de ejemplo de esta actividad.
       getter y setter automáticamente.
     </Aside>
 
-2. Creamos la entidad Users:
+2. Creamos la entidad Users
 
-    También creamos una clase para mostrar los datos de un conjunto
-    de usuarios.
+    También se crea una clase `Users` para agrupar varios usuarios en una
+    única respuesta.
 
-    <RemoteCode
-     url={`${raw}src/main/java/sampleproject/domain/Users.java`}
-     lang="java"
+     <RemoteCode
+      url={`${raw}src/main/java/sampleproject/domain/Users.java`}
+      lang="java"
      title="src/main/java/sampleproject/domain/Users.java"
     />
 
-3. Creamos el servicio UserService:
+3. Creamos el servicio UserService
 
-    Ahora creamos el servicio donde están tanto los controladores como la
-    conexión a la base de datos, tal como se muestra en el siguiente código:
+    Después, se implementa `UserService`, que contiene los endpoints y la
+    lógica de acceso a la base de datos:
 
-    <RemoteCode
-      url={`${oldRaw}src/main/java/sampleproject/service/UserService.java`}
-      lang="java"
+     <RemoteCode
+       url={`${oldRaw}src/main/java/sampleproject/service/UserService.java`}
+       lang="java"
       title="src/main/java/sampleproject/service/UserService.java"
     />
 
-4. Generamos el artefacto war:
+4. Generamos el artefacto war
 
-    Para generar el artefacto war, se ha utilizado el siguiente comando:
+    Por último, se genera el artefacto `.war` con el siguiente comando:
 
     ```bash
     mvn clean package
@@ -112,54 +114,54 @@ a pasar a crear el proyecto de ejemplo de esta actividad.
 
 ## 3. Ejecución del proyecto
 
-Pasamos explicar la ejecución del proyecto, para ello se va a utilizar
-WildFly como servidor de aplicaciones y PostgreSQL como base de datos.
-Todo esto en un docker-compose para facilitar la ejecución.
+Para ejecutar el proyecto se utilizará WildFly como servidor de
+aplicaciones y PostgreSQL como base de datos. Ambos servicios se
+levantan mediante `docker-compose` para simplificar la puesta en marcha.
 
 <Steps>
 
 1. Inicialización de la base de datos.
 
-    Creamos un script SQL para inicializar la base de datos:
+    Primero, se crea un script SQL para inicializar la base de datos:
 
-    <RemoteCode
-      url={`${raw}init.sql`}
-      lang="sql"
+     <RemoteCode
+       url={`${raw}init.sql`}
+       lang="sql"
       title="init.sql"
     />
 
-2. Creamos el docker-compose:
+2. Creamos el docker-compose
 
-    Para facilitar la ejecución del proyecto, se ha creado un archivo
-    `docker-compose.yml` para levantar tanto el servidor de
-    aplicaciones, pasandole el `.war` como la base de datos,
-    pasando el `init.sql`
+    A continuación, se crea un archivo `docker-compose.yml` para levantar
+    tanto WildFly con el artefacto `.war` como PostgreSQL con el script
+    `init.sql`.
 
-    <RemoteCode
-      url={`${raw}docker-compose.yml`}
-      lang="yaml"
+     <RemoteCode
+       url={`${raw}docker-compose.yml`}
+       lang="yaml"
       title="docker-compose.yml"
     />
 
-3. Comprobación del archivo WADL:
+3. Comprobación del archivo WADL
 
-    Para comprobar que el servicio ha sido desplegamos
-    entramos a la URL [`http://localhost:8080/actividad3/api/application.wadl`](http://localhost:8080/actividad3/api/application.wadl)
+    Para comprobar que el servicio se ha desplegado correctamente, se puede
+    acceder a la URL
+    [`http://localhost:8080/actividad3/api/application.wadl`](http://localhost:8080/actividad3/api/application.wadl).
 
-    <Image
-      src={wadlImage}
-      alt="WADL Application Documentation"
+     <Image
+       src={wadlImage}
+       alt="WADL Application Documentation"
       loading="lazy"
     />
 
 4. Comprobación de distintos servicios.
 
-    Se accede al servicio de usuarios
-    [`http://localhost:8080/sampleproject/api/users/json`](http://localhost:8080/actividad3/api/users/json)
+    También puede comprobarse el endpoint de usuarios en JSON desde
+    [`http://localhost:8080/actividad3/api/users/json`](http://localhost:8080/actividad3/api/users/json).
 
-    <Image
-      src={usersImage}
-      alt="Users Documentation"
+     <Image
+       src={usersImage}
+       alt="Users Documentation"
       loading="lazy"
     />
 
@@ -169,8 +171,10 @@ Todo esto en un docker-compose para facilitar la ejecución.
 
 **1. ¿En qué formato se obtienen los datos al acceder a un usuario específico y por qué?**
 
-Cuando se hace un GET un usuario la respuesta se viene definida por
-por el `@Path` que hace que se devuelva un JSON:
+Al acceder a un usuario concreto, la respuesta se devuelve en formato
+JSON. Esto ocurre porque el método está anotado con
+`@Produces("application/json")`, por lo que Jersey genera la respuesta en
+ese formato:
 
 <Code
   code={`
@@ -196,8 +200,9 @@ por el `@Path` que hace que se devuelva un JSON:
 Los códigos de estado HTTP se definen explícitamente utilizando el patrón
 **Builder** de la clase `javax.ws.rs.core.Response`.
 
-En lugar de devolver el objeto directamente, se construye la respuesta
-especificando el código, el cuerpo (entity) y cerrando con `build()`:
+En lugar de devolver directamente el objeto, se construye la respuesta
+indicando el código de estado, el cuerpo (`entity`) y finalizando con
+`build()`:
 
 ```java
 return Response.status(CODIGO_HTTP).entity(CUERPO_RESPUESTA).build();
@@ -205,17 +210,18 @@ return Response.status(CODIGO_HTTP).entity(CUERPO_RESPUESTA).build();
 
 **3. ¿Es posible cambiar el orden en el que se obtienen los usuarios sin cambiar el código de la consulta a la base de datos?**
 
-Sí, es posible. Puedes cambiar el orden manipulando la lista de datos
-directamente en Java (en memoria) después de haberlos extraído de la
-base de datos y antes de construir la respuesta HTTP.
+Sí, es posible. El orden puede cambiarse en Java, una vez recuperados los
+datos de la base de datos y antes de construir la respuesta HTTP.
 
-Consiste en utilizar la utilidad `Collections.sort()` pasándole un
-`Comparator` para definir el nuevo criterio de ordenación.
+Para ello se puede usar `Collections.sort()` junto con un `Comparator`
+que defina el nuevo criterio de ordenación.
 
 **4. Se debe implementar una operación para insertar usuarios. Se debe tener en cuenta
 que no deben insertarse usuarios con nombre de usuario repetidos ni con DNI repetido.**
 
-Para cumplir este nuevo requisito. Se ha hecho la siguiente implementción:
+Para cumplir este requisito, se realizan dos cambios principales: reforzar
+la restricción en la base de datos y añadir un endpoint `POST` en el
+servicio.
 
 <Steps>
 
@@ -236,9 +242,9 @@ Para cumplir este nuevo requisito. Se ha hecho la siguiente implementción:
     ```
 
 2. Añadir el controlador POST en UserService
-  
-    ```java ins={56-135}
-      package sampleproject.service;
+
+    ```java
+       package sampleproject.service;
 
       import javax.ws.rs.GET;
       import javax.ws.rs.POST;
@@ -440,18 +446,24 @@ Para cumplir este nuevo requisito. Se ha hecho la siguiente implementción:
           return user;
         }
 
-      }
-      ```
+       }
+       ```
 
-    * **Endpoint `@POST` (`createUser`):** Registra un nuevo usuario validando primero que los datos obligatorios (`username` y `dni`) existan y no estén duplicados en la base de datos (usando métodos auxiliares seguros con `PreparedStatement`), devolviendo `201 Created` si la inserción es exitosa, o los errores correspondientes (`400`, `409`, `500`) si falla alguna validación o la base de datos.
+    El método `createUser` valida primero que `username` y `dni` estén
+    presentes. Después comprueba que no existan valores repetidos en la
+    base de datos mediante consultas con `PreparedStatement`. Si la
+    inserción se realiza correctamente, devuelve `201 Created`; en caso
+    contrario, responde con `400`, `409` o `500`, según el tipo de error.
 
 </Steps>
+
 **5. Se debe modificar la operación que lista los usuarios para que estén ordenados
 por nombre de usuario. La consulta SQL no debe ser modificada.**
 
-Se ha implementado esto añadiendo `Collections.sort()` y pasándole la
-estructura de datos a ordenar (en este caso, la lista de usuarios),
-además de un `Comparator` para definir el criterio de ordenación:
+Esto se resuelve ordenando la colección en memoria, después de recuperar
+los datos de la base de datos y sin modificar la consulta SQL original.
+Para ello se utiliza `Collections.sort()` junto con un `Comparator` que
+ordena por nombre de usuario:
 
 ```java ins={18}
   private Users getUsersFromDB() {
