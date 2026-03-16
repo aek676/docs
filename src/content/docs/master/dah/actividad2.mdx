@@ -1,0 +1,758 @@
+---
+title: Actividad 2 - Actividad de Servicios Ionic
+description: Aplicación Ionic que integra OMDb API utilizando Angular Signals para gestionar el estado
+tags: [ionic, angular, signals, http, api, omdb]
+---
+
+import {
+  Steps,
+  Aside,
+  LinkCard,
+  Card,
+  Tabs,
+  TabItem,
+  FileTree,
+  Code,
+} from "@astrojs/starlight/components";
+
+## Descripción
+
+Esta actividad consiste en crear una aplicación Ionic que integra servicios web externos (OMDb API) utilizando Angular Signals para gestionar el estado de la aplicación. La aplicación permite buscar películas, ver sus detalles y gestionar una lista de favoritos.
+
+<LinkCard
+  title="OMDb API"
+  href="https://www.omdbapi.com/apikey.aspx"
+  description="API gratuita para buscar información de películas"
+/>
+
+---
+
+## Prerrequisitos
+
+<Steps>
+
+1. Obtención de clave API
+
+   Registrarse en [OMDb API](https://www.omdbapi.com/apikey.aspx) para obtener una clave de acceso gratuita (hasta 1000 peticiones/día).
+
+</Steps>
+
+---
+
+## Estructura del Proyecto
+
+<FileTree>
+
+- src/
+  - app/
+    - core/
+      - models/
+        - movies.model.ts
+      - services/
+        - movie/
+          - movie.service.ts
+    - features/
+      - home/
+      - movie-detail/
+      - movie-card/
+    - app.component.ts
+    - app.routes.ts
+  - environments/
+    - environment.ts
+    - environment.prod.ts
+  - main.ts
+
+</FileTree>
+
+---
+
+## Paso 1: Modelo de Datos
+
+### Objetivo
+
+Definir las interfaces TypeScript que representan los datosdevueltos por la OMDb API.
+
+export const moviesModelCode = `export interface OMDbMovie {
+  Title: string;
+  Year: string;
+  imdbID: string;
+  Type: string;
+  Poster: string;
+  Response?: string;
+}
+
+export interface OMDbSearchApiResponse {
+  Search: OMDbMovie[];
+  totalResults: string;
+  Response: string;
+}`;
+
+<Code
+  code={moviesModelCode}
+  lang="typescript"
+  title="src/app/core/models/movies.model.ts"
+/>
+
+<Aside type="note">
+
+- `OMDbMovie`: Representa una película individual
+- `OMDbSearchApiResponse`: Respuesta de búsqueda que incluye un array de películas y el total de resultados
+
+</Aside>
+
+---
+
+## Paso 2: Variables de Entorno
+
+### Objetivo
+
+Almacenar la clave API de forma segura, separando configuración del código.
+
+export const environmentCode = `export const environment = {
+  production: false,
+  apikeyOMDb: "TU_CLAVE_AQUI",
+};`;
+
+<Code
+  code={environmentCode}
+  lang="typescript"
+  title="src/environments/environment.ts"
+/>
+
+<Aside type="tip">
+
+En producción, usar `environment.prod.ts` con la clave real.
+
+</Aside>
+
+---
+
+## Paso 3: Configuración de HTTP en main.ts
+
+### Objetivo
+
+Habilitar el cliente HTTP en aplicaciones standalone de Angular.
+
+export const mainCode = `import { bootstrapApplication } from "@angular/platform-browser";
+import {
+  RouteReuseStrategy,
+  provideRouter,
+  withPreloading,
+  PreloadAllModules,
+} from "@angular/router";
+import {
+  IonicRouteStrategy,
+  provideIonicAngular,
+} from "@ionic/angular/standalone";
+import { routes } from "./app/app.routes";
+import { AppComponent } from "./app/app.component";
+import { provideHttpClient } from "@angular/common/http";
+
+bootstrapApplication(AppComponent, {
+providers: [
+{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+provideIonicAngular(),
+provideRouter(routes, withPreloading(PreloadAllModules)),
+provideHttpClient(),
+],
+});`;
+
+<Code
+  code={mainCode}
+  lang="typescript"
+  title="src/main.ts"
+  mark={["provideHttpClient"]}
+/>
+
+---
+
+## Paso 4: Servicio MovieService
+
+### Objetivo
+
+Crear un servicio que actúe como "Single Source of Truth" usando Signals de Angular para gestionar el estado de películas, favoritos y película actual.
+
+export const movieServiceCode = `import { HttpClient } from "@angular/common/http";
+import { computed, inject, Injectable, signal } from "@angular/core";
+import { environment } from "src/environments/environment";
+import { OMDbMovie, OMDbSearchApiResponse } from "../../models/movies.model";
+
+@Injectable({
+providedIn: "root",
+})
+export class MovieService {
+private http = inject(HttpClient);
+private readonly API_URL = \`<https://www.omdbapi.com/?apikey=\${environment.apikeyOMDb}\`>;
+
+// Signals privados para el estado interno
+private \_movies = signal<OMDbMovie[]>([]);
+private \_currentMovie = signal<OMDbMovie | null>(null);
+private \_favorites = signal<OMDbMovie[]>([]);
+
+// Exposición de estado como solo lectura
+public movies = this.\_movies.asReadonly();
+public currentMovie = this.\_currentMovie.asReadonly();
+public favorites = this.\_favorites.asReadonly();
+
+// Estados derivados (computed)
+public totalResults = computed(() => this.\_movies().length);
+public favoritesCount = computed(() => this.\_favorites().length);
+
+// Métodos públicos
+public toggleFavorite(movie: OMDbMovie) {
+const currentFavorites = this.\_favorites();
+const isAlreadyFavorite = currentFavorites.some(
+(m) => m.imdbID === movie.imdbID,
+);
+
+    if (isAlreadyFavorite) {
+      this._favorites.set(
+        currentFavorites.filter((m) => m.imdbID !== movie.imdbID),
+      );
+    } else {
+      this._favorites.set([...currentFavorites, movie]);
+    }
+
+}
+
+public isFavorite(imdbID: string): boolean {
+return this.\_favorites().some((m) => m.imdbID === imdbID);
+}
+
+searchMovies(title: string) {
+this.http
+.get<OMDbSearchApiResponse>(\`\${this.API_URL}&s=\${title}\`)
+.subscribe((response) => {
+this.\_movies.set(response.Response === "True" ? response.Search : []);
+});
+}
+
+getMovieDetails(id: string) {
+this.http.get<OMDbMovie>(\`\${this.API_URL}&i=\${id}\`).subscribe((movie) => {
+this.\_currentMovie.set(movie.Response === "True" ? movie : null);
+});
+}
+}`;
+
+<Code
+  code={movieServiceCode}
+  lang="typescript"
+  title="src/app/core/services/movie/movie.service.ts"
+/>
+
+<Aside type="tip">
+
+### Principios implementados
+
+1. **Estado privado con signal**: `_movies`, `_currentMovie`, `_favorites`
+2. **Exposición segura**: Uso de `asReadonly()` para prevenir modificaciones externas
+3. **Estado derivado**: `computed()` para `totalResults` y `favoritesCount`
+4. **Persistencia**: `providedIn: 'root'` mantiene el servicio vivo durante toda la navegación
+
+</Aside>
+
+---
+
+## Paso 5: Página Home
+
+### Objetivo
+
+Crear la página principal con:
+
+- Barra de búsqueda (modal)
+- Lista de favoritos
+- Contador de favoritos con computed
+
+export const homePageTsCode = `import { Component, inject, ViewChild } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { RouterLink } from "@angular/router";
+import {
+  IonContent,
+  IonSearchbar,
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonGrid,
+  IonRow,
+  IonCol,
+} from "@ionic/angular/standalone";
+import { MovieCardPage } from "../movie-card/movie-card.page";
+import { MovieService } from "src/app/core/services/movie/movie.service";
+import { addIcons } from "ionicons";
+import { star, closeOutline } from "ionicons/icons";
+
+@Component({
+selector: "app-home",
+templateUrl: "home.page.html",
+styleUrls: ["home.page.scss"],
+imports: [
+CommonModule,
+FormsModule,
+RouterLink,
+IonContent,
+IonSearchbar,
+IonModal,
+IonHeader,
+IonToolbar,
+IonTitle,
+IonButtons,
+IonButton,
+IonIcon,
+IonGrid,
+IonRow,
+IonCol,
+MovieCardPage,
+],
+})
+export class HomePage {
+@ViewChild(IonModal) modal!: IonModal;
+public movieService = inject(MovieService);
+
+constructor() {
+addIcons({ star, closeOutline });
+}
+
+onSearch(event: any) {
+const query = event.target.value;
+if (query) {
+this.movieService.searchMovies(query);
+}
+}
+
+closeModal() {
+this.modal.dismiss();
+}
+}`;
+
+<Code
+  code={homePageTsCode}
+  lang="typescript"
+  title="src/app/features/home/home.page.ts"
+/>
+
+<Code code={`<ion-header>
+  <ion-toolbar>
+    <div class="title-wrapper">
+      <ion-title
+        size="large"
+        color="primary"
+        class="brand-title silver-text-glow"
+      >
+        COSMIC CINEMA
+      </ion-title>
+      <div class="brand-divider"></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Botón de búsqueda (abre modal) -->
+  <div class="search-trigger-wrapper" id="open-search-modal">
+    <ion-searchbar placeholder="Search..." disabled="true"></ion-searchbar>
+  </div>
+
+  <!-- Sección de favoritos con contador computed -->
+
+  <ion-grid>
+    <ion-row class="ion-align-items-center">
+      <ion-col>
+        <h3 class="heralds-title ion-text-uppercase ion-no-margin">
+          <ion-icon name="star"></ion-icon>
+          MY HERALDS
+        </h3>
+      </ion-col>
+      <ion-col size="auto">
+        <span class="heralds-count">{{ movieService.favoritesCount() }}</span>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Lista de favoritos -->
+
+  <ion-grid>
+    <ion-row>
+      @for (movie of movieService.favorites(); track movie.imdbID) {
+      <ion-col size="6">
+        <app-movie-card
+          [title]="movie.Title"
+          [subtitle]="movie.Year"
+          [imageUrl]="movie.Poster"
+          [routerLink]="['/movie-detail', movie.imdbID]"
+        >
+        </app-movie-card>
+      </ion-col>
+      } @empty {
+      <ion-col size="12">
+        <p class="ion-text-center ion-padding">No favorites yet.</p>
+      </ion-col>
+      }
+    </ion-row>
+  </ion-grid>
+
+  <!-- Modal de búsqueda -->
+
+  <ion-modal trigger="open-search-modal">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar>
+          <ion-title class="ion-text-uppercase">Cosmic Navigation</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeModal()">
+              <ion-icon name="close-outline" size="large"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+        <ion-toolbar>
+          <ion-searchbar
+            placeholder="Search..."
+            (ionInput)="onSearch($event)"
+            debounce="500"
+          ></ion-searchbar>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <!-- Resultados de búsqueda -->
+        <div class="modal-cards-container">
+          @for (movie of movieService.movies(); track movie.imdbID) {
+          <div class="modal-celestial-wrapper">
+            <app-movie-card
+              [title]="movie.Title"
+              [subtitle]="movie.Year"
+              [imageUrl]="movie.Poster"
+              [routerLink]="['/movie-detail', movie.imdbID]"
+              (click)="closeModal()"
+            >
+            </app-movie-card>
+          </div>
+          } @empty {
+          <p class="ion-text-center empty-sector-text">
+            No signals found in this sector.
+          </p>
+          }
+        </div>
+      </ion-content>
+    </ng-template>
+
+  </ion-modal>
+</ion-content>`} lang="html" title="src/app/features/home/home.page.html" />
+
+<Aside type="note">
+
+### Características implementadas
+
+- **Computed Signal**: `movieService.favoritesCount()` muestra el número de favoritos en tiempo real
+- **Property Binding**: `[title]`, `[subtitle]`, `[imageUrl]`, `[routerLink]`
+- **Event Binding**: `(ionInput)="onSearch($event)"`, `(click)="closeModal()"`
+- **Persistencia**: Al navegar a detalle y volver, los favoritos se mantienen
+
+</Aside>
+
+---
+
+## Paso 6: Página de Detalle de Película
+
+### Objetivo
+
+Mostrar información detallada de una película y permitir añadir/quitar de favoritos.
+
+export const movieDetailPageTsCode = `import { Component, OnInit, inject } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { ActivatedRoute } from "@angular/router";
+import {
+  IonContent,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
+  IonBackButton,
+  IonButtons,
+  IonImg,
+  IonGrid,
+  IonCol,
+  IonRow,
+  IonCard,
+  IonCardContent,
+  IonButton,
+  IonBadge,
+} from "@ionic/angular/standalone";
+import { MovieService } from "src/app/core/services/movie/movie.service";
+
+@Component({
+selector: "app-movie-detail",
+templateUrl: "movie-detail.page.html",
+styleUrls: ["movie-detail.page.scss"],
+imports: [
+IonContent,
+IonHeader,
+IonTitle,
+IonToolbar,
+CommonModule,
+FormsModule,
+IonBackButton,
+IonButtons,
+IonImg,
+IonGrid,
+IonCol,
+IonRow,
+IonCard,
+IonCardContent,
+IonButton,
+IonBadge,
+],
+})
+export class MovieDetailPage implements OnInit {
+private route = inject(ActivatedRoute);
+public movieService = inject(MovieService);
+
+ngOnInit() {
+const id = this.route.snapshot.paramMap.get("id");
+if (id) {
+this.movieService.getMovieDetails(id);
+}
+}
+
+toggleFavorite() {
+const movie = this.movieService.currentMovie();
+if (movie) {
+this.movieService.toggleFavorite(movie);
+}
+}
+
+isFavorite(): boolean {
+const movie = this.movieService.currentMovie();
+return movie ? this.movieService.isFavorite(movie.imdbID) : false;
+}
+}`;
+
+<Code
+  code={movieDetailPageTsCode}
+  lang="typescript"
+  title="src/app/features/movie-detail/movie-detail.page.ts"
+/>
+
+<Code code={`<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <div class="title-wrapper">
+      <ion-buttons slot="start">
+        <ion-back-button defaultHref="/"></ion-back-button>
+      </ion-buttons>
+      <ion-title
+        size="large"
+        color="primary"
+        class="brand-title silver-text-glow"
+      >
+        COSMIC CINEMA
+      </ion-title>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="poster-container">
+    @if (movieService.currentMovie(); as movie) {
+    <div class="metallic-border poster-wrapper">
+      <div class="gradient-overlay"></div>
+      <ion-img [src]="movie.Poster" [alt]="movie.Title + ' Poster'"></ion-img>
+      <ion-badge class="live-signal-badge">
+        <span class="material-symbols-outlined">fiber_manual_record</span>
+        Live Signal
+      </ion-badge>
+    </div>
+    }
+  </div>
+
+  <div class="content-section">
+    @if (movieService.currentMovie(); as movie) {
+    <div class="title-section">
+      <div class="label-wrapper">
+        <div class="label-line"></div>
+        <span class="label-text">Identification</span>
+      </div>
+      <h1 class="movie-title">{{ movie.Title }}</h1>
+    </div>
+
+    <ion-card class="registry-card glass-panel">
+      <ion-card-content>
+        <div class="qr-decoration">
+          <span class="material-symbols-outlined qr-icon">qr_code_2</span>
+        </div>
+        <div class="registry-content">
+          <span class="registry-label">Global Registry ID</span>
+          <div class="id-row">
+            <span class="imdb-id">{{ movie.imdbID }}</span>
+            <div class="pulse-dot"></div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-grid class="ion-no-margin">
+      <ion-row>
+        <ion-col class="ion-padding-end">
+          <ion-card class="info-card glass-panel ion-no-margin">
+            <ion-card-content>
+              <p class="info-subtitle">Chronology</p>
+              <p class="info-value">{{ movie.Year }}</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <ion-col class="ion-padding-start">
+          <ion-card class="info-card glass-panel ion-no-margin">
+            <ion-card-content>
+              <p class="info-subtitle">Classification</p>
+              <p class="info-value">{{ movie.Type | titlecase }}</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <ion-button
+      size="large"
+      expand="full"
+      fill="clear"
+      class="chrome-gradient favorite-button"
+      (click)="toggleFavorite()"
+    >
+      <span class="material-symbols-outlined">
+        {{ isFavorite() ? 'favorite' : 'bookmark' }}
+      </span>
+      {{ isFavorite() ? 'Remove from Favorites' : 'Save to Favorites' }}
+    </ion-button>
+    }
+
+  </div>
+</ion-content>`} lang="html" title="src/app/features/movie-detail/movie-detail.page.html" />
+
+---
+
+## Paso 7: Componente Movie Card
+
+### Objetivo
+
+Componente reutilizable para mostrar información de películas.
+
+export const movieCardPageTsCode = `import { Component, Input } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import {
+  IonCard,
+  IonCardContent,
+  IonImg,
+  IonLabel,
+} from "@ionic/angular/standalone";
+
+@Component({
+selector: "app-movie-card",
+templateUrl: "movie-card.page.html",
+sstandalone: true,tyleUrls: ["movie-card.page.scss"],
+imports: [CommonModule, IonCard, IonCardContent, IonImg, IonLabel],
+})
+export class MovieCardPage {
+@Input() title: string = "";
+@Input() subtitle: string = "";
+@Input() imageUrl: string = "";
+}`;
+
+<Code
+  code={movieCardPageTsCode}
+  lang="typescript"
+  title="src/app/features/movie-card/movie-card.page.ts"
+/>
+
+<Code
+  code={`<ion-card class="cosmic-card">
+  <div class="image-container">
+    <ion-img
+      [src]="imageUrl"
+      [alt]="title"
+      [class.no-image]="!imageUrl || imageUrl === 'N/A'"
+    ></ion-img>
+    <div class="cosmic-overlay"></div>
+  </div>
+  <ion-card-content class="cosmic-content">
+    <ion-label class="cosmic-title">{{ title }}</ion-label>
+    <ion-label class="cosmic-subtitle">{{ subtitle }}</ion-label>
+  </ion-card-content>
+</ion-card>`}
+  lang="html"
+  title="src/app/features/movie-card/movie-card.page.html"
+/>
+
+---
+
+## Paso 8: Configuración de Rutas
+
+### Objetivo
+
+Definir las rutas de navegación de la aplicación.
+
+export const appRoutesCode = `import { Routes } from "@angular/router";
+
+export const routes: Routes = [
+  {
+    path: "home",
+    loadComponent: () =>
+      import("./features/home/home.page").then((m) => m.HomePage),
+  },
+  {
+    path: "",
+    redirectTo: "home",
+    pathMatch: "full",
+  },
+  {
+    path: "movie-detail/:id",
+    loadComponent: () =>
+      import("./features/movie-detail/movie-detail.page").then(
+        (m) => m.MovieDetailPage,
+      ),
+  },
+  {
+    path: "movie-card",
+    loadComponent: () =>
+      import("./features/movie-card/movie-card.page").then(
+        (m) => m.MovieCardPage,
+      ),
+  },
+];`;
+
+<Code code={appRoutesCode} lang="typescript" title="src/app/app.routes.ts" />
+
+<Aside type="tip">
+
+### Características de las rutas
+
+- **Lazy loading** para todas las páginas mediante `loadComponent()`
+- **Ruta dinámica** para detalles: `/movie-detail/:id`
+
+</Aside>
+
+---
+
+## Ejecución del Proyecto
+
+<Tabs syncKey="package-manager">
+
+<TabItem label="1. npm">
+
+```bash
+npm install
+```
+
+</TabItem>
+
+<TabItem label="2. ionic serve">
+
+```bash
+ionic serve
+```
+
+</TabItem>
+
+</Tabs>
