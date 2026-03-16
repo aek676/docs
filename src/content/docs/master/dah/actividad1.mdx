@@ -3,10 +3,17 @@ title: Actividad 1 - Navegación en Ionic
 description: En esta actividad se van a desarrollar las diferentes formas de navegar.
 ---
 
-import { Steps, Code, Tabs, TabItem } from '@astrojs/starlight/components';
-import { Image } from 'astro:assets';
-import { LoginImg, ClientsImg, ReservationImg, ProductsImg, ClientDetailImg, ReservationFormImg } from '@/assets/dah/actividad1';
-import RemoteCode from '@/components/RemoteCode.astro';
+import { Steps, Code, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import {
+  LoginImg,
+  ClientsImg,
+  ReservationImg,
+  ProductsImg,
+  ClientDetailImg,
+  ReservationFormImg,
+} from "@/assets/dah/actividad1";
+import RemoteCode from "@/components/RemoteCode.astro";
 
 export const REPO_URL = `https://raw.githubusercontent.com/aek676/dah-2026/main/actividad1/`;
 
@@ -34,6 +41,7 @@ diferentes vistas y funcionalidades de la aplicación.
       this.navCtrl.navigateForward('/details');
     }
     ```
+
   </TabItem>
 
   <TabItem label="RouterLink">
@@ -47,6 +55,7 @@ diferentes vistas y funcionalidades de la aplicación.
 
     <ion-button [routerLink]=`}['/new-page', productId]`}>See Product</ion-button>
     ```
+
   </TabItem>
 
   <TabItem label="Router.navigate">
@@ -68,15 +77,16 @@ diferentes vistas y funcionalidades de la aplicación.
       });
     }
     ```
+
   </TabItem>
 </Tabs>
 
 ### 1.1. Resumen de métodos de navegación
 
-| Método        | Uso Principal          | Ventaja Móvil                                |
-|---------------|------------------------|----------------------------------------------|
-| NavController | Lógica en el .ts      | Control total de animaciones y Stack         |
-| RouterLink    | Directamente en el .html | Más rápido de implementar y leer          |
+| Método        | Uso Principal               | Ventaja Móvil                              |
+| ------------- | --------------------------- | ------------------------------------------ |
+| NavController | Lógica en el .ts            | Control total de animaciones y Stack       |
+| RouterLink    | Directamente en el .html    | Más rápido de implementar y leer           |
 | Router        | Lógica compleja o Servicios | Estándar de Angular, compatible con Guards |
 
 ## 2. Ejercicio
@@ -128,52 +138,54 @@ Configurar las rutas principales de la aplicación y la pantalla inicial de inic
 
 Configurar la estructura base de la aplicación con tres pestañas (Clients, Reservations y Products), estableciendo la segunda como la vista por defecto al iniciar.
 
+export const defaultTabsRoutes = `
+{
+  path: '',
+  redirectTo: '/tabs/tab2',
+  pathMatch: 'full',
+  }
+  `;
+
 <Steps>
 
 1. Crear el template HTML
 
-    Crear o modificar el archivo `tabs.page.html` con el componente `ion-tabs`:
+   Crear o modificar el archivo `tabs.page.html` con el componente `ion-tabs`:
 
-    <RemoteCode
-      url={`${REPO_URL}src/app/features/tabs/tabs.page.html`}
-      lang="html"
-      title="src/app/features/tabs/tabs.page.html"
-    />
+   <RemoteCode
+     url={`${REPO_URL}src/app/features/tabs/tabs.page.html`}
+     lang="html"
+     title="src/app/features/tabs/tabs.page.html"
+   />
 
 2. Definir las rutas
 
-    Crear el archivo `tabs.routes.ts` con la configuración de rutas:
+   Crear el archivo `tabs.routes.ts` con la configuración de rutas:
 
-    <RemoteCode
-      url={`${REPO_URL}src/app/features/tabs/tabs.routes.ts`}
-      lang="typescript"
-      title="src/app/features/tabs/tabs.routes.ts"
-    />
+   <RemoteCode
+     url={`${REPO_URL}src/app/features/tabs/tabs.routes.ts`}
+     lang="typescript"
+     title="src/app/features/tabs/tabs.routes.ts"
+   />
 
 3. Configurar las pestañas por defecto
 
-    La pestaña por defecto se configura mediante **redirección del router**:
+   La pestaña por defecto se configura mediante **redirección del router**:
 
-    <Code
-      code={`
-   {
-      path: '',
-      redirectTo: '/tabs/tab2',
-      pathMatch: 'full',
-      }
-      `}
-      lang="typescript"
-      title="src/app/features/tabs/tabs.routes.ts"
-    />
+   <Code
+     code={defaultTabsRoutes}
+     lang="typescript"
+     title="src/app/features/tabs/tabs.routes.ts"
+   />
 
 4. Crear el componente TypeScript
 
-    Crear el archivo `tabs.page.ts`:
+   Crear el archivo `tabs.page.ts`:
 
-    <RemoteCode
-      url={`${REPO_URL}src/app/features/tabs/tabs.page.ts`}
-      lang="typescript"
-      title="src/app/features/tabs/tabs.page.ts"
+   <RemoteCode
+     url={`${REPO_URL}src/app/features/tabs/tabs.page.ts`}
+     lang="typescript"
+     title="src/app/features/tabs/tabs.page.ts"
    />
 
 </Steps>
@@ -224,14 +236,14 @@ Implementar la navegación desde la lista de clientes hacia una página de detal
 
 2. Crear template del listado con routerLink
 
-    En `src/app/features/clients/clients.page.html` usar `[routerLink]` para navegar al detalle:
+   En `src/app/features/clients/clients.page.html` usar `[routerLink]` para navegar al detalle:
 
-    <RemoteCode
-      url={`${REPO_URL}src/app/features/clients/clients.page.html`}
-      lang="html"
-      title="src/app/features/clients/clients.page.html"
-      mark={['[routerLink]']}
-    />
+   <RemoteCode
+     url={`${REPO_URL}src/app/features/clients/clients.page.html`}
+     lang="html"
+     title="src/app/features/clients/clients.page.html"
+     mark={["[routerLink]"]}
+   />
 
 3. Crear página de detalle con `@Input`
 
@@ -241,7 +253,7 @@ Implementar la navegación desde la lista de clientes hacia una página de detal
      url={`${REPO_URL}src/app/features/clients/client-detail.page.ts`}
      lang="typescript"
      title="src/app/features/clients/client-detail.page.ts"
-     mark={['@Input() id?: string;']}
+     mark={["@Input() id?: string;"]}
    />
 
 4. Crear template del detalle
@@ -252,7 +264,7 @@ Implementar la navegación desde la lista de clientes hacia una página de detal
      url={`${REPO_URL}src/app/features/clients/client-detail.page.html`}
      lang="html"
      title="src/app/features/clients/client-detail.page.html"
-     mark={['<h2>Cliente ID: {{ id }}</h2>']}
+     mark={["<h2>Cliente ID: {{ id }}</h2>"]}
    />
 
 </Steps>
@@ -281,7 +293,7 @@ Desarrollar la vista de reservas incluyendo un listado de datos de prueba y la f
      url={`${REPO_URL}src/app/features/reservations/reservations.page.ts`}
      lang="typescript"
      title="src/app/features/reservations/reservations.page.ts"
-     mark={['NavController', 'createReservation()', 'navigateForward']}
+     mark={["NavController", "createReservation()", "navigateForward"]}
    />
 
 3. Template del listado con botón
@@ -292,7 +304,7 @@ Desarrollar la vista de reservas incluyendo un listado de datos de prueba y la f
      url={`${REPO_URL}src/app/features/reservations/reservations.page.html`}
      lang="html"
      title="src/app/features/reservations/reservations.page.html"
-     mark={['createReservation()']}
+     mark={["createReservation()"]}
    />
 
 </Steps>
@@ -321,7 +333,7 @@ Mostrar un listado de productos e implementar la lógica de cerrar sesión.
      url={`${REPO_URL}src/app/features/products/products.page.ts`}
      lang="typescript"
      title="src/app/features/products/products.page.ts"
-     mark={['Router', 'logout()', 'router.navigate']}
+     mark={["Router", "logout()", "router.navigate"]}
    />
 
 3. Template del listado con botón de logout
@@ -332,7 +344,7 @@ Mostrar un listado de productos e implementar la lógica de cerrar sesión.
      url={`${REPO_URL}src/app/features/products/products.page.html`}
      lang="html"
      title="src/app/features/products/products.page.html"
-     mark={['logout()']}
+     mark={["logout()"]}
    />
 
 </Steps>
@@ -388,7 +400,11 @@ Integrar un diseño personalizado y adaptarlas a los componentes de Ionic.
    El border-radius se aplica globalmente a los componentes Ionic:
 
    ```scss
-   ion-button, ion-card, ion-input, ion-item, ion-chip {
+   ion-button,
+   ion-card,
+   ion-input,
+   ion-item,
+   ion-chip {
      --border-radius: var(--radius);
    }
    ```
@@ -410,34 +426,12 @@ Integrar un diseño personalizado y adaptarlas a los componentes de Ionic.
 
 2. Instalar dependencias y ejecutar
 
-   <Tabs>
-     <TabItem label="npm">
-
-     ```bash
-     npm install
-     ionic serve
-     ```
-
-     </TabItem>
-
-     <TabItem label="bun">
-
-     ```bash
-     bun install
-     ionic serve
-     ```
-
-     </TabItem>
-
-   </Tabs>
-
-   Esto abrirá la aplicación en el navegador por defecto en `http://localhost:8100`.
-
-3. (Opcional) Ejecutar en un dispositivo o emulador Android
-
    ```bash
-   ionic capacitor run android
+   npm install
+   ionic serve
    ```
+
+3. Esto abrirá la aplicación en el navegador por defecto en `http://localhost:8100`.
 
 </Steps>
 
@@ -446,50 +440,80 @@ Integrar un diseño personalizado y adaptarlas a los componentes de Ionic.
 La aplicación está compuesta por las siguientes pantallas:
 
 - **Login**: Pantalla inicial de la aplicación. Se muestra fuera de las pestañas y contiene
-  dos campos de texto (usuario y contraseña) y un botón `}Sign In`}. Al pulsar el botón,
+  dos campos de texto (usuario y contraseña) y un botón `Sign In`. Al pulsar el botón,
   se navega a las pestañas principales de la aplicación mediante `router.navigate(['/tabs'])`.
 
-  <Image src={LoginImg} alt="Pantalla de Login" width={330} style="display: block; margin: 1rem auto 0;" />
+  <Image
+    src={LoginImg}
+    alt="Pantalla de Login"
+    width={330}
+    style="display: block; margin: 1rem auto 0;"
+  />
 
 - **Clients (Pestaña 1)**: Muestra un listado de clientes con su nombre, email y teléfono.
   Cada ítem de la lista es un enlace (`routerLink`) que envía el ID del cliente a una
   página de detalle.
 
-  <Image src={ClientsImg} alt="Listado de clientes" width={330} style="display: block; margin: 1rem auto 0;" />
+  <Image
+    src={ClientsImg}
+    alt="Listado de clientes"
+    width={330}
+    style="display: block; margin: 1rem auto 0;"
+  />
 
 - **Detalle de Cliente**: Página accesible desde la lista de clientes. Recibe el ID del
   cliente mediante `@Input()` y muestra la información del cliente seleccionado. Incluye
   un botón de retroceso (`ion-back-button`) para volver al listado.
 
-  <Image src={ClientDetailImg} alt="Detalle de cliente" width={330} style="display: block; margin: 1rem auto 0;" />
+  <Image
+    src={ClientDetailImg}
+    alt="Detalle de cliente"
+    width={330}
+    style="display: block; margin: 1rem auto 0;"
+  />
 
 - **Reservations (Pestaña 2)**: Es la pestaña por defecto al iniciar la aplicación. Muestra
   un listado de reservas con el nombre del cliente, la fecha y el servicio. Incluye un botón
   `}Crear Reserva`} que utiliza `navCtrl.navigateForward` para navegar al formulario de creación.
 
-  <Image src={ReservationImg} alt="Listado de reservas" width={330} style="display: block; margin: 1rem auto 0;" />
+  <Image
+    src={ReservationImg}
+    alt="Listado de reservas"
+    width={330}
+    style="display: block; margin: 1rem auto 0;"
+  />
 
 - **Formulario de Reserva**: Página accesible desde la pestaña de reservas. Contiene un
   formulario para crear una nueva reserva.
 
-  <Image src={ReservationFormImg} alt="Formulario de reserva" width={330} style="display: block; margin: 1rem auto 0;" />
+  <Image
+    src={ReservationFormImg}
+    alt="Formulario de reserva"
+    width={330}
+    style="display: block; margin: 1rem auto 0;"
+  />
 
 - **Products (Pestaña 3)**: Muestra un listado de productos con su nombre, precio y descripción.
   Al final de la lista se encuentra el botón `}Cerrar Sesión`} de color rojo que permite salir
   de la aplicación.
 
-  <Image src={ProductsImg} alt="Listado de productos" width={330} style="display: block; margin: 1rem auto 0;" />
+  <Image
+    src={ProductsImg}
+    alt="Listado de productos"
+    width={330}
+    style="display: block; margin: 1rem auto 0;"
+  />
 
 ### 3.3. Flujo de navegación
 
 El flujo principal de la aplicación es el siguiente:
 
 1. El usuario accede a la aplicación y se muestra la pantalla de **Login**
-2. Al pulsar `}Sign In`}, se navega a las **pestañas** (por defecto se muestra Reservations)
+2. Al pulsar `Sign In`, se navega a las **pestañas** (por defecto se muestra Reservations)
 3. Desde las pestañas, el usuario puede:
    - En **Clients**: pulsar un cliente para ver su **detalle** y volver con el botón atrás
-   - En **Reservations**: pulsar `}Crear Reserva`} para acceder al **formulario** y volver con el botón atrás
-   - En **Products**: consultar los productos o pulsar **`}Cerrar Sesión`}**
-4. Al pulsar `}Cerrar Sesión`}, se ejecuta `localStorage.clear()` para simular la limpieza
+   - En **Reservations**: pulsar `Crear Reserva` para acceder al **formulario** y volver con el botón atrás
+   - En **Products**: consultar los productos o pulsar **`Cerrar Sesión`**
+4. Al pulsar `Cerrar Sesión`, se ejecuta `localStorage.clear()` para simular la limpieza
    de datos de sesión y se utiliza `router.navigate(['/login'])` para redirigir al usuario
    a la pantalla de Login, que se encuentra fuera de las pestañas

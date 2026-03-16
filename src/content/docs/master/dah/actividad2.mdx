@@ -15,6 +15,15 @@ import {
   Code,
 } from "@astrojs/starlight/components";
 
+import moviesModelCode from "@/assets/dah/actividad2/codes/movies.model.ts?raw";
+import environmentCode from "@/assets/dah/actividad2/codes/environment.ts?raw";
+import mainCode from "@/assets/dah/actividad2/codes/main.ts?raw";
+import movieServiceCode from "@/assets/dah/actividad2/codes/movie.service.ts?raw";
+import homePageTsCode from "@/assets/dah/actividad2/codes/home.page.ts?raw";
+import movieDetailPageTsCode from "@/assets/dah/actividad2/codes/movie-detail.page.ts?raw";
+import movieCardPageTsCode from "@/assets/dah/actividad2/codes/movie-card.page.ts?raw";
+import appRoutesCode from "@/assets/dah/actividad2/codes/app.routes.ts?raw";
+
 ## Descripción
 
 Esta actividad consiste en crear una aplicación Ionic que integra servicios web externos (OMDb API) utilizando Angular Signals para gestionar el estado de la aplicación. La aplicación permite buscar películas, ver sus detalles y gestionar una lista de favoritos.
@@ -72,21 +81,6 @@ Esta actividad consiste en crear una aplicación Ionic que integra servicios web
 
 Definir las interfaces TypeScript que representan los datosdevueltos por la OMDb API.
 
-export const moviesModelCode = `export interface OMDbMovie {
-  Title: string;
-  Year: string;
-  imdbID: string;
-  Type: string;
-  Poster: string;
-  Response?: string;
-}
-
-export interface OMDbSearchApiResponse {
-  Search: OMDbMovie[];
-  totalResults: string;
-  Response: string;
-}`;
-
 <Code
   code={moviesModelCode}
   lang="typescript"
@@ -108,11 +102,6 @@ export interface OMDbSearchApiResponse {
 
 Almacenar la clave API de forma segura, separando configuración del código.
 
-export const environmentCode = `export const environment = {
-  production: false,
-  apikeyOMDb: "TU_CLAVE_AQUI",
-};`;
-
 <Code
   code={environmentCode}
   lang="typescript"
@@ -133,30 +122,6 @@ En producción, usar `environment.prod.ts` con la clave real.
 
 Habilitar el cliente HTTP en aplicaciones standalone de Angular.
 
-export const mainCode = `import { bootstrapApplication } from "@angular/platform-browser";
-import {
-  RouteReuseStrategy,
-  provideRouter,
-  withPreloading,
-  PreloadAllModules,
-} from "@angular/router";
-import {
-  IonicRouteStrategy,
-  provideIonicAngular,
-} from "@ionic/angular/standalone";
-import { routes } from "./app/app.routes";
-import { AppComponent } from "./app/app.component";
-import { provideHttpClient } from "@angular/common/http";
-
-bootstrapApplication(AppComponent, {
-providers: [
-{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-provideIonicAngular(),
-provideRouter(routes, withPreloading(PreloadAllModules)),
-provideHttpClient(),
-],
-});`;
-
 <Code
   code={mainCode}
   lang="typescript"
@@ -172,75 +137,13 @@ provideHttpClient(),
 
 Crear un servicio que actúe como "Single Source of Truth" usando Signals de Angular para gestionar el estado de películas, favoritos y película actual.
 
-export const movieServiceCode = `import { HttpClient } from "@angular/common/http";
-import { computed, inject, Injectable, signal } from "@angular/core";
-import { environment } from "src/environments/environment";
-import { OMDbMovie, OMDbSearchApiResponse } from "../../models/movies.model";
-
-@Injectable({
-providedIn: "root",
-})
-export class MovieService {
-private http = inject(HttpClient);
-private readonly API_URL = \`<https://www.omdbapi.com/?apikey=\${environment.apikeyOMDb}\`>;
-
-// Signals privados para el estado interno
-private \_movies = signal<OMDbMovie[]>([]);
-private \_currentMovie = signal<OMDbMovie | null>(null);
-private \_favorites = signal<OMDbMovie[]>([]);
-
-// Exposición de estado como solo lectura
-public movies = this.\_movies.asReadonly();
-public currentMovie = this.\_currentMovie.asReadonly();
-public favorites = this.\_favorites.asReadonly();
-
-// Estados derivados (computed)
-public totalResults = computed(() => this.\_movies().length);
-public favoritesCount = computed(() => this.\_favorites().length);
-
-// Métodos públicos
-public toggleFavorite(movie: OMDbMovie) {
-const currentFavorites = this.\_favorites();
-const isAlreadyFavorite = currentFavorites.some(
-(m) => m.imdbID === movie.imdbID,
-);
-
-    if (isAlreadyFavorite) {
-      this._favorites.set(
-        currentFavorites.filter((m) => m.imdbID !== movie.imdbID),
-      );
-    } else {
-      this._favorites.set([...currentFavorites, movie]);
-    }
-
-}
-
-public isFavorite(imdbID: string): boolean {
-return this.\_favorites().some((m) => m.imdbID === imdbID);
-}
-
-searchMovies(title: string) {
-this.http
-.get<OMDbSearchApiResponse>(\`\${this.API_URL}&s=\${title}\`)
-.subscribe((response) => {
-this.\_movies.set(response.Response === "True" ? response.Search : []);
-});
-}
-
-getMovieDetails(id: string) {
-this.http.get<OMDbMovie>(\`\${this.API_URL}&i=\${id}\`).subscribe((movie) => {
-this.\_currentMovie.set(movie.Response === "True" ? movie : null);
-});
-}
-}`;
-
 <Code
   code={movieServiceCode}
   lang="typescript"
   title="src/app/core/services/movie/movie.service.ts"
 />
 
-<Aside type="tip">
+<Aside>
 
 ### Principios implementados
 
@@ -262,72 +165,6 @@ Crear la página principal con:
 - Barra de búsqueda (modal)
 - Lista de favoritos
 - Contador de favoritos con computed
-
-export const homePageTsCode = `import { Component, inject, ViewChild } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
-import {
-  IonContent,
-  IonSearchbar,
-  IonModal,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonButton,
-  IonIcon,
-  IonGrid,
-  IonRow,
-  IonCol,
-} from "@ionic/angular/standalone";
-import { MovieCardPage } from "../movie-card/movie-card.page";
-import { MovieService } from "src/app/core/services/movie/movie.service";
-import { addIcons } from "ionicons";
-import { star, closeOutline } from "ionicons/icons";
-
-@Component({
-selector: "app-home",
-templateUrl: "home.page.html",
-styleUrls: ["home.page.scss"],
-imports: [
-CommonModule,
-FormsModule,
-RouterLink,
-IonContent,
-IonSearchbar,
-IonModal,
-IonHeader,
-IonToolbar,
-IonTitle,
-IonButtons,
-IonButton,
-IonIcon,
-IonGrid,
-IonRow,
-IonCol,
-MovieCardPage,
-],
-})
-export class HomePage {
-@ViewChild(IonModal) modal!: IonModal;
-public movieService = inject(MovieService);
-
-constructor() {
-addIcons({ star, closeOutline });
-}
-
-onSearch(event: any) {
-const query = event.target.value;
-if (query) {
-this.movieService.searchMovies(query);
-}
-}
-
-closeModal() {
-this.modal.dismiss();
-}
-}`;
 
 <Code
   code={homePageTsCode}
@@ -461,75 +298,6 @@ this.modal.dismiss();
 
 Mostrar información detallada de una película y permitir añadir/quitar de favoritos.
 
-export const movieDetailPageTsCode = `import { Component, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
-import { ActivatedRoute } from "@angular/router";
-import {
-  IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
-  IonBackButton,
-  IonButtons,
-  IonImg,
-  IonGrid,
-  IonCol,
-  IonRow,
-  IonCard,
-  IonCardContent,
-  IonButton,
-  IonBadge,
-} from "@ionic/angular/standalone";
-import { MovieService } from "src/app/core/services/movie/movie.service";
-
-@Component({
-selector: "app-movie-detail",
-templateUrl: "movie-detail.page.html",
-styleUrls: ["movie-detail.page.scss"],
-imports: [
-IonContent,
-IonHeader,
-IonTitle,
-IonToolbar,
-CommonModule,
-FormsModule,
-IonBackButton,
-IonButtons,
-IonImg,
-IonGrid,
-IonCol,
-IonRow,
-IonCard,
-IonCardContent,
-IonButton,
-IonBadge,
-],
-})
-export class MovieDetailPage implements OnInit {
-private route = inject(ActivatedRoute);
-public movieService = inject(MovieService);
-
-ngOnInit() {
-const id = this.route.snapshot.paramMap.get("id");
-if (id) {
-this.movieService.getMovieDetails(id);
-}
-}
-
-toggleFavorite() {
-const movie = this.movieService.currentMovie();
-if (movie) {
-this.movieService.toggleFavorite(movie);
-}
-}
-
-isFavorite(): boolean {
-const movie = this.movieService.currentMovie();
-return movie ? this.movieService.isFavorite(movie.imdbID) : false;
-}
-}`;
-
 <Code
   code={movieDetailPageTsCode}
   lang="typescript"
@@ -639,27 +407,6 @@ return movie ? this.movieService.isFavorite(movie.imdbID) : false;
 
 Componente reutilizable para mostrar información de películas.
 
-export const movieCardPageTsCode = `import { Component, Input } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import {
-  IonCard,
-  IonCardContent,
-  IonImg,
-  IonLabel,
-} from "@ionic/angular/standalone";
-
-@Component({
-selector: "app-movie-card",
-templateUrl: "movie-card.page.html",
-sstandalone: true,tyleUrls: ["movie-card.page.scss"],
-imports: [CommonModule, IonCard, IonCardContent, IonImg, IonLabel],
-})
-export class MovieCardPage {
-@Input() title: string = "";
-@Input() subtitle: string = "";
-@Input() imageUrl: string = "";
-}`;
-
 <Code
   code={movieCardPageTsCode}
   lang="typescript"
@@ -693,38 +440,9 @@ export class MovieCardPage {
 
 Definir las rutas de navegación de la aplicación.
 
-export const appRoutesCode = `import { Routes } from "@angular/router";
-
-export const routes: Routes = [
-  {
-    path: "home",
-    loadComponent: () =>
-      import("./features/home/home.page").then((m) => m.HomePage),
-  },
-  {
-    path: "",
-    redirectTo: "home",
-    pathMatch: "full",
-  },
-  {
-    path: "movie-detail/:id",
-    loadComponent: () =>
-      import("./features/movie-detail/movie-detail.page").then(
-        (m) => m.MovieDetailPage,
-      ),
-  },
-  {
-    path: "movie-card",
-    loadComponent: () =>
-      import("./features/movie-card/movie-card.page").then(
-        (m) => m.MovieCardPage,
-      ),
-  },
-];`;
-
 <Code code={appRoutesCode} lang="typescript" title="src/app/app.routes.ts" />
 
-<Aside type="tip">
+<Aside>
 
 ### Características de las rutas
 
@@ -737,22 +455,18 @@ export const routes: Routes = [
 
 ## Ejecución del Proyecto
 
-<Tabs syncKey="package-manager">
+<Steps>
 
-<TabItem label="1. npm">
+1. npm install
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-</TabItem>
+1. ionic serve
 
-<TabItem label="2. ionic serve">
+   ```bash
+   ionic serve
+   ```
 
-```bash
-ionic serve
-```
-
-</TabItem>
-
-</Tabs>
+</Steps>
