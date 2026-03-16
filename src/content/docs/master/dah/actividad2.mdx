@@ -15,7 +15,12 @@ import {
   Code,
 } from "@astrojs/starlight/components";
 
+import { Image } from "astro:assets";
+
 import moviesModelCode from "@/assets/dah/actividad2/codes/movies.model.ts?raw";
+import homeImage from "@/assets/dah/actividad2/images/Home.png";
+import searchImage from "@/assets/dah/actividad2/images/Search.png";
+import movieDetailImage from "@/assets/dah/actividad2/images/MovieDetail.png";
 import environmentCode from "@/assets/dah/actividad2/codes/environment.ts?raw";
 import mainCode from "@/assets/dah/actividad2/codes/main.ts?raw";
 import movieServiceCode from "@/assets/dah/actividad2/codes/movie.service.ts?raw";
@@ -470,3 +475,19 @@ Definir las rutas de navegación de la aplicación.
    ```
 
 </Steps>
+
+---
+
+## Capturas del Diseño
+
+### Pantalla Principal
+
+<Image src={homeImage} alt="Pantalla principal con favoritos" width={300} />
+
+### Modal de Búsqueda
+
+<Image src={searchImage} alt="Modal de búsqueda" width={300} />
+
+### Detalle de Película
+
+<Image src={movieDetailImage} alt="Detalle de película" width={300} />
