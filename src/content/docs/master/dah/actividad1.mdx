@@ -8,6 +8,8 @@ import { Image } from 'astro:assets';
 import { LoginImg, ClientsImg, ReservationImg, ProductsImg, ClientDetailImg, ReservationFormImg } from '@/assets/dah/actividad1';
 import RemoteCode from '@/components/RemoteCode.astro';
 
+export const REPO_URL = `https://raw.githubusercontent.com/aek676/dah-2026/main/actividad1/`;
+
 En esta actividad se van a desarrollar las diferentes formas de navegar entre páginas
 en una aplicación Ionic. La navegación es un aspecto fundamental en el
 desarrollo de aplicaciones móviles, ya que permite a los usuarios moverse entre
@@ -41,9 +43,9 @@ diferentes vistas y funcionalidades de la aplicación.
     una gestión compleja de la pila de navegación.
 
     ```html
-    <ion-button routerLink="/new-page">Go to New Page</ion-button>
+    <ion-button routerLink=`}/new-page`}>Go to New Page</ion-button>
 
-    <ion-button [routerLink]="['/new-page', productId]">See Product</ion-button>
+    <ion-button [routerLink]=`}['/new-page', productId]`}>See Product</ion-button>
     ```
   </TabItem>
 
@@ -93,7 +95,7 @@ Configurar las rutas principales de la aplicación y la pantalla inicial de inic
    de rutas en `src/app/app.routes.ts`:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/app.routes.ts"
+     url={`${REPO_URL}src/app/app.routes.ts`}
      lang="typescript"
      title="src/app/app.routes.ts"
    />
@@ -107,7 +109,7 @@ Configurar las rutas principales de la aplicación y la pantalla inicial de inic
    La página de Login se encuentra en `src/app/features/login/login.page.ts`:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/login/login.page.ts"
+     url={`${REPO_URL}src/app/features/login/login.page.ts`}
      lang="typescript"
      title="src/app/features/login/login.page.ts"
    />
@@ -115,7 +117,7 @@ Configurar las rutas principales de la aplicación y la pantalla inicial de inic
    Y su template en `src/app/features/login/login.page.html`:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/login/login.page.html"
+     url={`${REPO_URL}src/app/features/login/login.page.html`}
      lang="html"
      title="src/app/features/login/login.page.html"
    />
@@ -133,7 +135,7 @@ Configurar la estructura base de la aplicación con tres pestañas (Clients, Res
     Crear o modificar el archivo `tabs.page.html` con el componente `ion-tabs`:
 
     <RemoteCode
-      url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.html"
+      url={`${REPO_URL}src/app/features/tabs/tabs.page.html`}
       lang="html"
       title="src/app/features/tabs/tabs.page.html"
     />
@@ -143,7 +145,7 @@ Configurar la estructura base de la aplicación con tres pestañas (Clients, Res
     Crear el archivo `tabs.routes.ts` con la configuración de rutas:
 
     <RemoteCode
-      url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.routes.ts"
+      url={`${REPO_URL}src/app/features/tabs/tabs.routes.ts`}
       lang="typescript"
       title="src/app/features/tabs/tabs.routes.ts"
     />
@@ -169,7 +171,7 @@ Configurar la estructura base de la aplicación con tres pestañas (Clients, Res
     Crear el archivo `tabs.page.ts`:
 
     <RemoteCode
-      url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.ts"
+      url={`${REPO_URL}src/app/features/tabs/tabs.page.ts`}
       lang="typescript"
       title="src/app/features/tabs/tabs.page.ts"
    />
@@ -187,7 +189,7 @@ Añadir y configurar iconos adecuados en el HTML para representar visualmente el
    Modificar `src/app/features/tabs/tabs.page.html` para usar `ion-icon`:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.html"
+     url={`${REPO_URL}src/app/features/tabs/tabs.page.html`}
      lang="html"
      title="src/app/features/tabs/tabs.page.html"
    />
@@ -197,7 +199,7 @@ Añadir y configurar iconos adecuados en el HTML para representar visualmente el
    En `tabs.page.ts` importar y registrar los iconos:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/tabs/tabs.page.ts"
+     url={`${REPO_URL}src/app/features/tabs/tabs.page.ts`}
      lang="typescript"
      title="src/app/features/tabs/tabs.page.ts"
    />
@@ -215,7 +217,7 @@ Implementar la navegación desde la lista de clientes hacia una página de detal
    Crear `src/app/features/clients/clients.page.ts` con la interfaz `Client` y el array de ejemplo:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/clients.page.ts"
+     url={`${REPO_URL}src/app/features/clients/clients.page.ts`}
      lang="typescript"
      title="src/app/features/clients/clients.page.ts"
    />
@@ -225,7 +227,7 @@ Implementar la navegación desde la lista de clientes hacia una página de detal
     En `src/app/features/clients/clients.page.html` usar `[routerLink]` para navegar al detalle:
 
     <RemoteCode
-      url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/clients.page.html>"
+      url={`${REPO_URL}src/app/features/clients/clients.page.html`}
       lang="html"
       title="src/app/features/clients/clients.page.html"
       mark={['[routerLink]']}
@@ -236,7 +238,7 @@ Implementar la navegación desde la lista de clientes hacia una página de detal
    En `src/app/features/clients/client-detail.page.ts` usar el decorador `@Input()` para recibir el ID:
 
    <RemoteCode
-     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/client-detail.page.ts>"
+     url={`${REPO_URL}src/app/features/clients/client-detail.page.ts`}
      lang="typescript"
      title="src/app/features/clients/client-detail.page.ts"
      mark={['@Input() id?: string;']}
@@ -247,7 +249,7 @@ Implementar la navegación desde la lista de clientes hacia una página de detal
    En `src/app/features/clients/client-detail.page.html` mostrar el ID recibido:
 
    <RemoteCode
-     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/clients/client-detail.page.html>"
+     url={`${REPO_URL}src/app/features/clients/client-detail.page.html`}
      lang="html"
      title="src/app/features/clients/client-detail.page.html"
      mark={['<h2>Cliente ID: {{ id }}</h2>']}
@@ -266,7 +268,7 @@ Desarrollar la vista de reservas incluyendo un listado de datos de prueba y la f
    Crear `src/app/features/reservations/reservations.page.ts` con la interfaz `Reservation` y el array de ejemplo:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/reservations/reservations.page.ts"
+     url={`${REPO_URL}src/app/features/reservations/reservations.page.ts`}
      lang="typescript"
      title="src/app/features/reservations/reservations.page.ts"
    />
@@ -276,7 +278,7 @@ Desarrollar la vista de reservas incluyendo un listado de datos de prueba y la f
    En el componente TypeScript, inyectar `NavController` y crear la función `createReservation()`:
 
    <RemoteCode
-     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/reservations/reservations.page.ts>"
+     url={`${REPO_URL}src/app/features/reservations/reservations.page.ts`}
      lang="typescript"
      title="src/app/features/reservations/reservations.page.ts"
      mark={['NavController', 'createReservation()', 'navigateForward']}
@@ -287,7 +289,7 @@ Desarrollar la vista de reservas incluyendo un listado de datos de prueba y la f
    En `src/app/features/reservations/reservations.page.html` usar `ion-list` y el botón:
 
    <RemoteCode
-     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/reservations/reservations.page.html>"
+     url={`${REPO_URL}src/app/features/reservations/reservations.page.html`}
      lang="html"
      title="src/app/features/reservations/reservations.page.html"
      mark={['createReservation()']}
@@ -306,7 +308,7 @@ Mostrar un listado de productos e implementar la lógica de cerrar sesión.
    Crear `src/app/features/products/products.page.ts` con la interfaz `Product` y el array de ejemplo:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/products/products.page.ts"
+     url={`${REPO_URL}src/app/features/products/products.page.ts`}
      lang="typescript"
      title="src/app/features/products/products.page.ts"
    />
@@ -316,7 +318,7 @@ Mostrar un listado de productos e implementar la lógica de cerrar sesión.
    En el componente TypeScript, inyectar `Router` y crear la función `logout()` que limpie `localStorage` y navegue a `/login`:
 
    <RemoteCode
-     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/products/products.page.ts>"
+     url={`${REPO_URL}src/app/features/products/products.page.ts`}
      lang="typescript"
      title="src/app/features/products/products.page.ts"
      mark={['Router', 'logout()', 'router.navigate']}
@@ -327,7 +329,7 @@ Mostrar un listado de productos e implementar la lógica de cerrar sesión.
    En `src/app/features/products/products.page.html`:
 
    <RemoteCode
-     url="<https://raw.githubusercontent.com/aek676/dah-2026/main/src/app/features/products/products.page.html>"
+     url={`${REPO_URL}src/app/features/products/products.page.html`}
      lang="html"
      title="src/app/features/products/products.page.html"
      mark={['logout()']}
@@ -352,7 +354,7 @@ Integrar un diseño personalizado y adaptarlas a los componentes de Ionic.
    Crear `src/theme/variables.scss` con las variables generadas:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/theme/variables.scss"
+     url={`${REPO_URL}src/theme/variables.scss`}
      lang="scss"
      title="src/theme/variables.scss"
    />
@@ -368,7 +370,7 @@ Integrar un diseño personalizado y adaptarlas a los componentes de Ionic.
    En `src/global.scss` se mapean las variables shadcn a las variables de Ionic:
 
    <RemoteCode
-     url="https://raw.githubusercontent.com/aek676/dah-2026/main/src/global.scss"
+     url={`${REPO_URL}src/global.scss`}
      lang="scss"
      title="src/global.scss"
    />
@@ -444,7 +446,7 @@ Integrar un diseño personalizado y adaptarlas a los componentes de Ionic.
 La aplicación está compuesta por las siguientes pantallas:
 
 - **Login**: Pantalla inicial de la aplicación. Se muestra fuera de las pestañas y contiene
-  dos campos de texto (usuario y contraseña) y un botón "Sign In". Al pulsar el botón,
+  dos campos de texto (usuario y contraseña) y un botón `}Sign In`}. Al pulsar el botón,
   se navega a las pestañas principales de la aplicación mediante `router.navigate(['/tabs'])`.
 
   <Image src={LoginImg} alt="Pantalla de Login" width={330} style="display: block; margin: 1rem auto 0;" />
@@ -453,41 +455,41 @@ La aplicación está compuesta por las siguientes pantallas:
   Cada ítem de la lista es un enlace (`routerLink`) que envía el ID del cliente a una
   página de detalle.
 
-  <Image src={ClientsImg} alt="Listado de clientes" width={330} style="display: block; margin: 1rem auto 0;"/>
+  <Image src={ClientsImg} alt="Listado de clientes" width={330} style="display: block; margin: 1rem auto 0;" />
 
 - **Detalle de Cliente**: Página accesible desde la lista de clientes. Recibe el ID del
   cliente mediante `@Input()` y muestra la información del cliente seleccionado. Incluye
   un botón de retroceso (`ion-back-button`) para volver al listado.
 
-  <Image src={ClientDetailImg} alt="Detalle de cliente" width={330} style="display: block; margin: 1rem auto 0;"/>
+  <Image src={ClientDetailImg} alt="Detalle de cliente" width={330} style="display: block; margin: 1rem auto 0;" />
 
 - **Reservations (Pestaña 2)**: Es la pestaña por defecto al iniciar la aplicación. Muestra
   un listado de reservas con el nombre del cliente, la fecha y el servicio. Incluye un botón
-  "Crear Reserva" que utiliza `navCtrl.navigateForward` para navegar al formulario de creación.
+  `}Crear Reserva`} que utiliza `navCtrl.navigateForward` para navegar al formulario de creación.
 
   <Image src={ReservationImg} alt="Listado de reservas" width={330} style="display: block; margin: 1rem auto 0;" />
 
 - **Formulario de Reserva**: Página accesible desde la pestaña de reservas. Contiene un
   formulario para crear una nueva reserva.
 
-  <Image src={ReservationFormImg} alt="Formulario de reserva" width={330} style="display: block; margin: 1rem auto 0;"/>
+  <Image src={ReservationFormImg} alt="Formulario de reserva" width={330} style="display: block; margin: 1rem auto 0;" />
 
 - **Products (Pestaña 3)**: Muestra un listado de productos con su nombre, precio y descripción.
-  Al final de la lista se encuentra el botón "Cerrar Sesión" de color rojo que permite salir
+  Al final de la lista se encuentra el botón `}Cerrar Sesión`} de color rojo que permite salir
   de la aplicación.
 
-  <Image src={ProductsImg} alt="Listado de productos" width={330} style="display: block; margin: 1rem auto 0;"/>
+  <Image src={ProductsImg} alt="Listado de productos" width={330} style="display: block; margin: 1rem auto 0;" />
 
 ### 3.3. Flujo de navegación
 
 El flujo principal de la aplicación es el siguiente:
 
 1. El usuario accede a la aplicación y se muestra la pantalla de **Login**
-2. Al pulsar "Sign In", se navega a las **pestañas** (por defecto se muestra Reservations)
+2. Al pulsar `}Sign In`}, se navega a las **pestañas** (por defecto se muestra Reservations)
 3. Desde las pestañas, el usuario puede:
    - En **Clients**: pulsar un cliente para ver su **detalle** y volver con el botón atrás
-   - En **Reservations**: pulsar "Crear Reserva" para acceder al **formulario** y volver con el botón atrás
-   - En **Products**: consultar los productos o pulsar **"Cerrar Sesión"**
-4. Al pulsar "Cerrar Sesión", se ejecuta `localStorage.clear()` para simular la limpieza
+   - En **Reservations**: pulsar `}Crear Reserva`} para acceder al **formulario** y volver con el botón atrás
+   - En **Products**: consultar los productos o pulsar **`}Cerrar Sesión`}**
+4. Al pulsar `}Cerrar Sesión`}, se ejecuta `localStorage.clear()` para simular la limpieza
    de datos de sesión y se utiliza `router.navigate(['/login'])` para redirigir al usuario
    a la pantalla de Login, que se encuentra fuera de las pestañas
