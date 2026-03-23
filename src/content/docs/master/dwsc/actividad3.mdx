@@ -3,13 +3,13 @@ title: Actividad 3 - Desarrollo de un servicio web RESTful
 description: En esta actividad se implementará un servicio RESTful con Java, Jersey y WildFly.
 ---
 
-import { Code, Steps, Aside } from '@astrojs/starlight/components';
-import RemoteCode from '@/components/RemoteCode.astro';
-import { Image } from 'astro:assets';
-import { wadlImage, usersImage } from '@/assets/dwsc/actividad3/';
+import { Code, Steps, Aside } from "@astrojs/starlight/components";
+import RemoteCode from "@/components/RemoteCode.astro";
+import { Image } from "astro:assets";
+import { wadlImage, usersImage } from "@/assets/dwsc/actividad3/";
 
 export const raw = `https://raw.githubusercontent.com/aek676/dwsc-2026/main/actividad3/`;
-export const oldRaw = `https://raw.githubusercontent.com/aek676/dwsc-2026/9b4b69667317d38e282ca184a75f6b66c3e9b686/actividad3/`
+export const oldRaw = `https://raw.githubusercontent.com/aek676/dwsc-2026/9b4b69667317d38e282ca184a75f6b66c3e9b686/actividad3/`;
 
 El objetivo de esta actividad es implementar un servicio RESTful utilizando
 Java, Jersey y WildFly. El servicio permitirá leer y añadir usuarios dando
@@ -25,35 +25,31 @@ servidor de aplicaciones.
 
 1. Inicialización del proyecto Maven
 
-    Se crea un proyecto Maven con empaquetado `war` usando el siguiente
-    comando:
+   Se crea un proyecto Maven con empaquetado `war` usando el siguiente
+   comando:
 
-    ```bash
-    mvn archetype:generate -DgroupId=es.ual -DartifactId=actividad3 -DarchetypeArtifactId=maven-archetype-webapp -Dpackaging=war -DinteractiveMode=false
-    ```
+   ```bash
+   mvn archetype:generate -DgroupId=es.ual -DartifactId=actividad3 -DarchetypeArtifactId=maven-archetype-webapp -Dpackaging=war -DinteractiveMode=false
+   ```
 
 2. Modificar web.xml
 
-    A continuación, se modifica el archivo `web.xml` para definir el
-    servlet de Jersey, mapear las rutas bajo `/api/*` e indicar el paquete
-    donde se encuentran los recursos REST.
+   A continuación, se modifica el archivo `web.xml` para definir el
+   servlet de Jersey, mapear las rutas bajo `/api/*` e indicar el paquete
+   donde se encuentran los recursos REST.
 
-    <RemoteCode
-      url={`${raw}src/main/webapp/WEB-INF/web.xml`}
-      lang="xml"
-      title="src/main/webapp/WEB-INF/web.xml"
-    />
+   <RemoteCode
+     url={`${raw}src/main/webapp/WEB-INF/web.xml`}
+     lang="xml"
+     title="src/main/webapp/WEB-INF/web.xml"
+   />
 
 3. Modificar pom.xml
 
-    Después, se actualiza el archivo `pom.xml` para añadir las dependencias
-    necesarias del proyecto.
+   Después, se actualiza el archivo `pom.xml` para añadir las dependencias
+   necesarias del proyecto.
 
-     <RemoteCode
-      url={`${raw}pom.xml`}
-      lang="xml"
-     title="pom.xml"
-    />
+   <RemoteCode url={`${raw}pom.xml`} lang="xml" title="pom.xml" />
 
 </Steps>
 
@@ -66,49 +62,49 @@ servicio de ejemplo que formarán la API.
 
 1. Creamos la entidad User
 
-    Para representar la estructura de datos de cada usuario, se crea la
-    clase `User` con los atributos necesarios:
+   Para representar la estructura de datos de cada usuario, se crea la
+   clase `User` con los atributos necesarios:
 
-     <RemoteCode
-      url={`${raw}src/main/java/sampleproject/domain/User.java`}
-      lang="java"
+   <RemoteCode
+     url={`${raw}src/main/java/sampleproject/domain/User.java`}
+     lang="java"
      title="src/main/java/sampleproject/domain/User.java"
-    />
+   />
 
-    <Aside>
-      Utilizamos `@Getter` y `@Setter` de Lombok para generar los métodos
-      getter y setter automáticamente.
-    </Aside>
+   <Aside>
+     Utilizamos `@Getter` y `@Setter` de Lombok para generar los métodos getter
+     y setter automáticamente.
+   </Aside>
 
 2. Creamos la entidad Users
 
-    También se crea una clase `Users` para agrupar varios usuarios en una
-    única respuesta.
+   También se crea una clase `Users` para agrupar varios usuarios en una
+   única respuesta.
 
-     <RemoteCode
-      url={`${raw}src/main/java/sampleproject/domain/Users.java`}
-      lang="java"
+   <RemoteCode
+     url={`${raw}src/main/java/sampleproject/domain/Users.java`}
+     lang="java"
      title="src/main/java/sampleproject/domain/Users.java"
-    />
+   />
 
 3. Creamos el servicio UserService
 
-    Después, se implementa `UserService`, que contiene los endpoints y la
-    lógica de acceso a la base de datos:
+   Después, se implementa `UserService`, que contiene los endpoints y la
+   lógica de acceso a la base de datos:
 
-     <RemoteCode
-       url={`${oldRaw}src/main/java/sampleproject/service/UserService.java`}
-       lang="java"
-      title="src/main/java/sampleproject/service/UserService.java"
-    />
+   <RemoteCode
+     url={`${oldRaw}src/main/java/sampleproject/service/UserService.java`}
+     lang="java"
+     title="src/main/java/sampleproject/service/UserService.java"
+   />
 
 4. Generamos el artefacto war
 
-    Por último, se genera el artefacto `.war` con el siguiente comando:
+   Por último, se genera el artefacto `.war` con el siguiente comando:
 
-    ```bash
-    mvn clean package
-    ```
+   ```bash
+   mvn clean package
+   ```
 
 </Steps>
 
@@ -122,48 +118,36 @@ levantan mediante `docker-compose` para simplificar la puesta en marcha.
 
 1. Inicialización de la base de datos.
 
-    Primero, se crea un script SQL para inicializar la base de datos:
+   Primero, se crea un script SQL para inicializar la base de datos:
 
-     <RemoteCode
-       url={`${raw}init.sql`}
-       lang="sql"
-      title="init.sql"
-    />
+   <RemoteCode url={`${raw}init.sql`} lang="sql" title="init.sql" />
 
 2. Creamos el docker-compose
 
-    A continuación, se crea un archivo `docker-compose.yml` para levantar
-    tanto WildFly con el artefacto `.war` como PostgreSQL con el script
-    `init.sql`.
+   A continuación, se crea un archivo `docker-compose.yml` para levantar
+   tanto WildFly con el artefacto `.war` como PostgreSQL con el script
+   `init.sql`.
 
-     <RemoteCode
-       url={`${raw}docker-compose.yml`}
-       lang="yaml"
-      title="docker-compose.yml"
-    />
+   <RemoteCode
+     url={`${raw}docker-compose.yml`}
+     lang="yaml"
+     title="docker-compose.yml"
+   />
 
 3. Comprobación del archivo WADL
 
-    Para comprobar que el servicio se ha desplegado correctamente, se puede
-    acceder a la URL
-    [`http://localhost:8080/actividad3/api/application.wadl`](http://localhost:8080/actividad3/api/application.wadl).
+   Para comprobar que el servicio se ha desplegado correctamente, se puede
+   acceder a la URL
+   [`http://localhost:8080/actividad3/api/application.wadl`](http://localhost:8080/actividad3/api/application.wadl).
 
-     <Image
-       src={wadlImage}
-       alt="WADL Application Documentation"
-      loading="lazy"
-    />
+   <Image src={wadlImage} alt="WADL Application Documentation" loading="lazy" />
 
 4. Comprobación de distintos servicios.
 
-    También puede comprobarse el endpoint de usuarios en JSON desde
-    [`http://localhost:8080/actividad3/api/users/json`](http://localhost:8080/actividad3/api/users/json).
+   También puede comprobarse el endpoint de usuarios en JSON desde
+   [`http://localhost:8080/actividad3/api/users/json`](http://localhost:8080/actividad3/api/users/json).
 
-     <Image
-       src={usersImage}
-       alt="Users Documentation"
-      loading="lazy"
-    />
+   <Image src={usersImage} alt="Users Documentation" loading="lazy" />
 
 </Steps>
 
@@ -227,233 +211,233 @@ servicio.
 
 1. Modificar el script SQL
 
-    ```diff lang="sql"
-      CREATE TABLE sampleusers
-      (
-      username text NOT NULL,
-      password text NOT NULL,
-    - dni text NOT NULL,
-    + dni text NOT NULL UNIQUE,
-      name text NOT NULL,
-      surnames text NOT NULL,
-      age integer NOT NULL,
-      PRIMARY KEY (username)
-      );
-    ```
+   ```diff lang="sql"
+     CREATE TABLE sampleusers
+     (
+     username text NOT NULL,
+     password text NOT NULL,
+   - dni text NOT NULL,
+   + dni text NOT NULL UNIQUE,
+     name text NOT NULL,
+     surnames text NOT NULL,
+     age integer NOT NULL,
+     PRIMARY KEY (username)
+     );
+   ```
 
 2. Añadir el controlador POST en UserService
 
-    ```java
-       package sampleproject.service;
+   ```java
+      package sampleproject.service;
 
-      import javax.ws.rs.GET;
-      import javax.ws.rs.POST;
-      import javax.ws.rs.Path;
-      import javax.ws.rs.PathParam;
-      import javax.ws.rs.Produces;
-      import javax.ws.rs.Consumes;
-      import javax.ws.rs.core.MediaType;
-      import javax.ws.rs.core.Response;
-      import java.sql.*;
-      import java.util.Collections;
-      import java.util.Comparator;
-      import sampleproject.domain.User;
-      import sampleproject.domain.Users;
+     import javax.ws.rs.GET;
+     import javax.ws.rs.POST;
+     import javax.ws.rs.Path;
+     import javax.ws.rs.PathParam;
+     import javax.ws.rs.Produces;
+     import javax.ws.rs.Consumes;
+     import javax.ws.rs.core.MediaType;
+     import javax.ws.rs.core.Response;
+     import java.sql.*;
+     import java.util.Collections;
+     import java.util.Comparator;
+     import sampleproject.domain.User;
+     import sampleproject.domain.Users;
 
-      @Path("/users")
-      public class UserService {
+     @Path("/users")
+     public class UserService {
 
-        @GET
-        @Produces({ "application/json", "application/xml" })
-        public Response getUsers() {
-          Users users = this.getUsersFromDB();
+       @GET
+       @Produces({ "application/json", "application/xml" })
+       public Response getUsers() {
+         Users users = this.getUsersFromDB();
 
-          return Response.status(200).entity(users).build();
-        }
-
-        @Path("xml")
-        @GET
-        @Produces("application/xml")
-        public Response getUsersXML() {
-          Users users = this.getUsersFromDB();
-          return Response.status(200).entity(users).build();
-        }
-
-        @Path("json")
-        @GET
-        @Produces("application/json")
-        public Response getUsersJSON() {
-          Users users = this.getUsersFromDB();
-          return Response.status(200).entity(users).build();
-        }
-
-        @Path("{username}")
-        @GET
-        @Produces("application/json")
-        public Response getExampleUser(@PathParam("username") String username) {
-          User user = this.getUserFromDB(username);
-          if (user != null) {
-            return Response.status(200).entity(user).build();
-          } else {
-            return Response.status(400).build();
-          }
-        }
-
-        @POST
-        @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-        @Produces(MediaType.APPLICATION_JSON)
-        public Response createUser(User user) {
-          if (user.getUsername() == null || user.getDni() == null) {
-            return Response.status(400).entity("{\"error\": \"Username and DNI are required\"}").build();
-          }
-
-          if (this.existsUsername(user.getUsername())) {
-            return Response.status(409).entity("{\"error\": \"Username already exists\"}").build();
-          }
-
-          if (this.existsDni(user.getDni())) {
-            return Response.status(409).entity("{\"error\": \"DNI already exists\"}").build();
-          }
-
-          boolean inserted = this.insertUser(user);
-          if (inserted) {
-            return Response.status(201).entity(user).build();
-          } else {
-            return Response.status(500).entity("{\"error\": \"Failed to insert user\"}").build();
-          }
-        }
-
-        private boolean existsUsername(String username) {
-          Connection conn = this.connect2DB();
-          try {
-            PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM sampleusers WHERE username = ?");
-            ps.setString(1, username);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-              return rs.getInt(1) > 0;
-            }
-            rs.close();
-            ps.close();
-            conn.close();
-          } catch (SQLException e) {
-            System.err.println("[UserService - existsUsername] SQLException: " + e.getMessage());
-          }
-          return false;
-        }
-
-        private boolean existsDni(String dni) {
-          Connection conn = this.connect2DB();
-          try {
-            PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM sampleusers WHERE dni = ?");
-            ps.setString(1, dni);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-              return rs.getInt(1) > 0;
-            }
-            rs.close();
-            ps.close();
-            conn.close();
-          } catch (SQLException e) {
-            System.err.println("[UserService - existsDni] SQLException: " + e.getMessage());
-          }
-          return false;
-        }
-
-        private boolean insertUser(User user) {
-          Connection conn = this.connect2DB();
-          try {
-            PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO sampleusers (username, password, dni, name, surnames, age) VALUES (?, ?, ?, ?, ?, ?)");
-            ps.setString(1, user.getUsername());
-            ps.setString(2, user.getPassword());
-            ps.setString(3, user.getDni());
-            ps.setString(4, user.getName());
-            ps.setString(5, user.getSurnames());
-            ps.setInt(6, user.getAge());
-            int result = ps.executeUpdate();
-            ps.close();
-            conn.close();
-            return result > 0;
-          } catch (SQLException e) {
-            System.err.println("[UserService - insertUser] SQLException: " + e.getMessage());
-          }
-          return false;
-        }
-
-        private Connection connect2DB() {
-          Connection conn = null;
-          try {
-            Class.forName("org.postgresql.Driver");
-            String url = "jdbc:postgresql://postgres:5432/dwsc";
-            conn = DriverManager.getConnection(url, "estudiante", "estudiante");
-          } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-          } catch (SQLException e) {
-            e.printStackTrace();
-          }
-          return conn;
-        }
-
-        private Users getUsersFromDB() {
-          Users users = new Users();
-          Connection conn = this.connect2DB();
-          try {
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM sampleusers ORDER BY age");
-            while (rs.next()) {
-              User user = new User();
-              user.setUsername(rs.getString("username"));
-              user.setPassword(rs.getString("password"));
-              user.setDni(rs.getString("dni"));
-              user.setName(rs.getString("name"));
-              user.setSurnames(rs.getString("surnames"));
-              user.setAge(rs.getInt("age"));
-              users.add(user);
-            }
-
-            rs.close();
-            st.close();
-            conn.close();
-          } catch (SQLException e) {
-            System.err.println("[UserService - getUsersFromDB] SQLException while querying the users");
-            System.err.println(e.getMessage());
-          }
-          return users;
-        }
-
-        private User getUserFromDB(String username) {
-          User user = null;
-          Connection conn = this.connect2DB();
-          try {
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM sampleusers WHERE username = '" + username + "'");
-            if (rs.next()) {
-              user = new User();
-              user.setUsername(rs.getString("username"));
-              user.setPassword(rs.getString("password"));
-              user.setDni(rs.getString("dni"));
-              user.setName(rs.getString("name"));
-              user.setSurnames(rs.getString("surnames"));
-              user.setAge(rs.getInt("age"));
-            }
-            rs.close();
-            st.close();
-            conn.close();
-          } catch (SQLException e) {
-            System.err.println("[UserService - getUserFromDB] SQLException while querying a user");
-            System.err.println(e.getMessage());
-          }
-          return user;
-        }
-
+         return Response.status(200).entity(users).build();
        }
-       ```
 
-    El método `createUser` valida primero que `username` y `dni` estén
-    presentes. Después comprueba que no existan valores repetidos en la
-    base de datos mediante consultas con `PreparedStatement`. Si la
-    inserción se realiza correctamente, devuelve `201 Created`; en caso
-    contrario, responde con `400`, `409` o `500`, según el tipo de error.
+       @Path("xml")
+       @GET
+       @Produces("application/xml")
+       public Response getUsersXML() {
+         Users users = this.getUsersFromDB();
+         return Response.status(200).entity(users).build();
+       }
+
+       @Path("json")
+       @GET
+       @Produces("application/json")
+       public Response getUsersJSON() {
+         Users users = this.getUsersFromDB();
+         return Response.status(200).entity(users).build();
+       }
+
+       @Path("{username}")
+       @GET
+       @Produces("application/json")
+       public Response getExampleUser(@PathParam("username") String username) {
+         User user = this.getUserFromDB(username);
+         if (user != null) {
+           return Response.status(200).entity(user).build();
+         } else {
+           return Response.status(400).build();
+         }
+       }
+
+       @POST
+       @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+       @Produces(MediaType.APPLICATION_JSON)
+       public Response createUser(User user) {
+         if (user.getUsername() == null || user.getDni() == null) {
+           return Response.status(400).entity("{\"error\": \"Username and DNI are required\"}").build();
+         }
+
+         if (this.existsUsername(user.getUsername())) {
+           return Response.status(409).entity("{\"error\": \"Username already exists\"}").build();
+         }
+
+         if (this.existsDni(user.getDni())) {
+           return Response.status(409).entity("{\"error\": \"DNI already exists\"}").build();
+         }
+
+         boolean inserted = this.insertUser(user);
+         if (inserted) {
+           return Response.status(201).entity(user).build();
+         } else {
+           return Response.status(500).entity("{\"error\": \"Failed to insert user\"}").build();
+         }
+       }
+
+       private boolean existsUsername(String username) {
+         Connection conn = this.connect2DB();
+         try {
+           PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM sampleusers WHERE username = ?");
+           ps.setString(1, username);
+           ResultSet rs = ps.executeQuery();
+           if (rs.next()) {
+             return rs.getInt(1) > 0;
+           }
+           rs.close();
+           ps.close();
+           conn.close();
+         } catch (SQLException e) {
+           System.err.println("[UserService - existsUsername] SQLException: " + e.getMessage());
+         }
+         return false;
+       }
+
+       private boolean existsDni(String dni) {
+         Connection conn = this.connect2DB();
+         try {
+           PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM sampleusers WHERE dni = ?");
+           ps.setString(1, dni);
+           ResultSet rs = ps.executeQuery();
+           if (rs.next()) {
+             return rs.getInt(1) > 0;
+           }
+           rs.close();
+           ps.close();
+           conn.close();
+         } catch (SQLException e) {
+           System.err.println("[UserService - existsDni] SQLException: " + e.getMessage());
+         }
+         return false;
+       }
+
+       private boolean insertUser(User user) {
+         Connection conn = this.connect2DB();
+         try {
+           PreparedStatement ps = conn.prepareStatement(
+               "INSERT INTO sampleusers (username, password, dni, name, surnames, age) VALUES (?, ?, ?, ?, ?, ?)");
+           ps.setString(1, user.getUsername());
+           ps.setString(2, user.getPassword());
+           ps.setString(3, user.getDni());
+           ps.setString(4, user.getName());
+           ps.setString(5, user.getSurnames());
+           ps.setInt(6, user.getAge());
+           int result = ps.executeUpdate();
+           ps.close();
+           conn.close();
+           return result > 0;
+         } catch (SQLException e) {
+           System.err.println("[UserService - insertUser] SQLException: " + e.getMessage());
+         }
+         return false;
+       }
+
+       private Connection connect2DB() {
+         Connection conn = null;
+         try {
+           Class.forName("org.postgresql.Driver");
+           String url = "jdbc:postgresql://postgres:5432/dwsc";
+           conn = DriverManager.getConnection(url, "estudiante", "estudiante");
+         } catch (ClassNotFoundException e) {
+           e.printStackTrace();
+         } catch (SQLException e) {
+           e.printStackTrace();
+         }
+         return conn;
+       }
+
+       private Users getUsersFromDB() {
+         Users users = new Users();
+         Connection conn = this.connect2DB();
+         try {
+           Statement st = conn.createStatement();
+           ResultSet rs = st.executeQuery("SELECT * FROM sampleusers ORDER BY age");
+           while (rs.next()) {
+             User user = new User();
+             user.setUsername(rs.getString("username"));
+             user.setPassword(rs.getString("password"));
+             user.setDni(rs.getString("dni"));
+             user.setName(rs.getString("name"));
+             user.setSurnames(rs.getString("surnames"));
+             user.setAge(rs.getInt("age"));
+             users.add(user);
+           }
+
+           rs.close();
+           st.close();
+           conn.close();
+         } catch (SQLException e) {
+           System.err.println("[UserService - getUsersFromDB] SQLException while querying the users");
+           System.err.println(e.getMessage());
+         }
+         return users;
+       }
+
+       private User getUserFromDB(String username) {
+         User user = null;
+         Connection conn = this.connect2DB();
+         try {
+           Statement st = conn.createStatement();
+           ResultSet rs = st.executeQuery("SELECT * FROM sampleusers WHERE username = '" + username + "'");
+           if (rs.next()) {
+             user = new User();
+             user.setUsername(rs.getString("username"));
+             user.setPassword(rs.getString("password"));
+             user.setDni(rs.getString("dni"));
+             user.setName(rs.getString("name"));
+             user.setSurnames(rs.getString("surnames"));
+             user.setAge(rs.getInt("age"));
+           }
+           rs.close();
+           st.close();
+           conn.close();
+         } catch (SQLException e) {
+           System.err.println("[UserService - getUserFromDB] SQLException while querying a user");
+           System.err.println(e.getMessage());
+         }
+         return user;
+       }
+
+      }
+   ```
+
+   El método `createUser` valida primero que `username` y `dni` estén
+   presentes. Después comprueba que no existan valores repetidos en la
+   base de datos mediante consultas con `PreparedStatement`. Si la
+   inserción se realiza correctamente, devuelve `201 Created`; en caso
+   contrario, responde con `400`, `409` o `500`, según el tipo de error.
 
 </Steps>
 
