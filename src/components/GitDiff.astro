@@ -1,0 +1,73 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+interface Props {
+  repo: string;
+  commitA: string;
+  commitB: string;
+  file: string;
+  lang: string;
+  title?: string;
+}
+
+const { repo, commitA, commitB, file, lang, title } = Astro.props;
+
+const baseUrl = 'https://raw.githubusercontent.com';
+const urlA = `${baseUrl}/${repo}/${commitA}/${file}`;
+const urlB = `${baseUrl}/${repo}/${commitB}/${file}`;
+
+const [responseA, responseB] = await Promise.all([
+  fetch(urlA),
+  fetch(urlB)
+]);
+
+let diffContent = '';
+
+let delLines: number[] = [];
+let insLines: number[] = [];
+
+if (!responseA.ok || !responseB.ok) {
+  diffContent = `// Error fetching files:\n// ${urlA}\n// ${urlB}`;
+} else {
+  const contentA = await responseA.text();
+  const contentB = await responseB.text();
+
+  const linesA = contentA.split('\n');
+  const linesB = contentB.split('\n');
+
+  const cleanLines: string[] = [];
+  const maxLength = Math.max(linesA.length, linesB.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const lineA = linesA[i];
+    const lineB = linesB[i];
+
+    if (lineA === undefined) {
+      cleanLines.push(lineB);
+      insLines.push(cleanLines.length);
+    } else if (lineB === undefined) {
+      cleanLines.push(lineA);
+      delLines.push(cleanLines.length);
+    } else if (lineA !== lineB) {
+      if (lineA.trim() !== '') {
+        cleanLines.push(lineA);
+        delLines.push(cleanLines.length);
+      }
+      cleanLines.push(lineB);
+      insLines.push(cleanLines.length);
+    } else {
+      cleanLines.push(lineB);
+    }
+  }
+
+  diffContent = cleanLines.join('\n');
+}
+---
+
+<Code 
+  code={diffContent} 
+  lang={lang} 
+  del={delLines.length > 0 ? delLines : undefined} 
+  ins={insLines.length > 0 ? insLines : undefined} 
+  title={title || file} 
+/>
