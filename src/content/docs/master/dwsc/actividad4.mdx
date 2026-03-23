@@ -42,23 +42,29 @@ Spring Boot por defecto. Como metadatos del proyecto, se establece el grupo
 
 </Aside>
 
-### 1.2. Docker Compose
+### 1.2. Base de datos
+
+Se utiliza Docker Compose con una imagen de PostgreSQL para levantar una
+base de datos relacional para la actividad.
+
+Primero se crea el script `init.sql` que define la tabla `sampleusers` e
+inserta los datos iniciales.
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/50b22e5/actividad4/src/main/resources/init.sql"
+  lang="sql"
+  title="init.sql"
+/>
+
+Después se crea el archivo `docker-compose.yml` que configura el servicio
+PostgreSQL con el usuario `estudiante`, la contraseña `estudiante` y la
+base de datos `dwsc`.
 
 <RemoteCode
   url={`${raw}docker-compose.yml`}
   lang="yaml"
   title="docker-compose.yml"
 />
-
-<Aside type="note">
-
-  El servicio PostgreSQL se configura con las credenciales:
-
-  - Base de datos: `dwsc`
-  - Usuario: `estudiante`
-  - Contraseña: `estudiante`
-
-</Aside>
 
 ## 2. Ejercicio propuesto
 
