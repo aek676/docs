@@ -44,6 +44,7 @@ if (!responseA.ok || !responseB.ok) {
 
     for (const line of lines) {
       if (part.removed) {
+        cleanLines.push(line);
         delLines.push(displayLine);
         lineA++;
         displayLine++;
