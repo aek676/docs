@@ -1,0 +1,515 @@
+---
+title: Actividad 4 - Desarrollo de un microservicio RESTful
+description: En esta actividad se implementará un microservicio RESTful con Spring Boot, PostgreSQL y Thymeleaf.
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import RemoteCode from "@/components/RemoteCode.astro";
+import GitDiff from "@/components/GitDiff.astro";
+import { usersTableImage, userHtmlImage } from "@/assets/dwsc/actividad4/img/";
+
+export const raw = `https://raw.githubusercontent.com/aek676/dwsc-2026/main/actividad4/`;
+
+El objetivo de esta actividad es desarrollar un microservicio RESTful utilizando
+Spring Boot. A diferencia de la actividad anterior donde se usó Jersey y WildFly,
+en este caso se utiliza el framework Spring Boot con su servidor embebido Tomcat,
+Thymeleaf para las vistas HTML y PostgreSQL como base de datos.
+
+## 1. Inicialización del proyecto
+
+El proyecto se crea utilizando [Spring Initializr](https://start.spring.io/),
+seleccionando Maven como sistema de build, Java como lenguaje y la versión de
+Spring Boot por defecto. Como metadatos del proyecto, se establece el grupo
+`es.dwsc` y el artefacto `sampleprojectmicro`.
+
+<RemoteCode
+  url={`${raw}src/main/java/es/dwsc/sampleprojectmicro/SampleprojectmicroApplication.java`}
+  lang="java"
+  title="SampleprojectmicroApplication.java"
+/>
+
+<RemoteCode url={`${raw}pom.xml`} lang="xml" title="pom.xml" />
+
+<Aside type="note">
+
+  Se añaden las siguientes dependencias:
+
+  - `spring-boot-starter-web`: Para crear microservicios web
+  - `postgresql`: Driver JDBC para PostgreSQL
+  - `spring-boot-starter-thymeleaf`: Motor de plantillas
+  - `jackson-annotations`: Anotaciones para serialización JSON
+
+</Aside>
+
+### 1.2. Docker Compose
+
+<RemoteCode
+  url={`${raw}docker-compose.yml`}
+  lang="yaml"
+  title="docker-compose.yml"
+/>
+
+<Aside type="note">
+
+  El servicio PostgreSQL se configura con las credenciales:
+
+  - Base de datos: `dwsc`
+  - Usuario: `estudiante`
+  - Contraseña: `estudiante`
+
+</Aside>
+
+## 2. Ejercicio propuesto
+
+El microservicio debe implementar las siguientes operaciones:
+
+1. Una operación para obtener la lista de usuarios en formato JSON.
+2. Una operación para visualizar la lista de usuarios en una tabla HTML.
+3. Una operación para obtener los datos de un usuario particular en formato JSON.
+4. Una operación para visualizar los datos de un usuario en una capa HTML.
+5. Una operación para insertar usuarios.
+
+### 2.1. Lista de usuarios en formato JSON
+
+<Steps>
+
+1. Crear los modelos de dominio
+
+   Se crea la clase `User.java` con los atributos del usuario: `username`,
+   `password`, `dni`, `name`, `surnames` y `age`. También se crea la clase
+   `Users.java` que extiende de `ArrayList<User>` para representar una
+   colección de usuarios.
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dwsc-2026/ccfc2095698fc3a3d22171be8bea5658196d4faf/actividad4/src/main/java/es/dwsc/sampleprojectmicro/domain/User.java"
+     lang="java"
+     title="User.java"
+   />
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dwsc-2026/ccfc2095698fc3a3d22171be8bea5658196d4faf/actividad4/src/main/java/es/dwsc/sampleprojectmicro/domain/Users.java"
+     lang="java"
+     title="Users.java"
+   />
+
+   <Aside type="note">
+
+     Se utiliza `@Getter` y `@Setter` de Lombok para generar automáticamente los
+     métodos de acceso a los atributos.
+
+   </Aside>
+
+2. Crear el servicio
+
+   Se crea la interfaz `UserService.java` con el método `getUsersFromDB()` y
+   la implementación `UserServiceImpl.java` que establece una conexión JDBC
+   con PostgreSQL y ejecuta la consulta SQL `SELECT * FROM sampleusers ORDER BY age`.
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dwsc-2026/ccfc2095698fc3a3d22171be8bea5658196d4faf/actividad4/src/main/java/es/dwsc/sampleprojectmicro/service/UserService.java"
+     lang="java"
+     title="UserService.java"
+   />
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dwsc-2026/ccfc2095698fc3a3d22171be8bea5658196d4faf/actividad4/src/main/java/es/dwsc/sampleprojectmicro/service/UserServiceImpl.java"
+     lang="java"
+     title="UserServiceImpl.java"
+   />
+
+   <Aside type="note">
+
+     La clase `UserServiceImpl` implementa la lógica de negocio. El método
+     `getUsersFromDB()` establece una conexión JDBC con PostgreSQL y ejecuta la
+     consulta SQL para obtener todos los usuarios.
+
+   </Aside>
+
+3. Crear el controlador
+
+   Se crea `UserController.java` con el endpoint `GET /users` que devuelve
+   la lista de usuarios en formato JSON gracias a la anotación `@ResponseBody`.
+
+   <RemoteCode
+     url="https://raw.githubusercontent.com/aek676/dwsc-2026/ccfc2095698fc3a3d22171be8bea5658196d4faf/actividad4/src/main/java/es/dwsc/sampleprojectmicro/controller/UserController.java"
+     lang="java"
+     title="UserController.java"
+   />
+
+   <Aside type="note">
+
+     El endpoint `/users` devuelve la lista de usuarios en formato JSON gracias
+     a la anotación `@ResponseBody`, que indica a Spring que serialice el objeto
+     directamente a la respuesta HTTP.
+
+   </Aside>
+
+4. Comprobar el endpoint
+
+   Se puede comprobar el endpoint que devuelve la lista de usuarios en
+   formato JSON.
+
+   <Tabs>
+     <TabItem label="Petición">
+
+       ```bash title="Terminal"
+       curl -X GET http://localhost:8080/users
+       ```
+
+     </TabItem>
+     <TabItem label="Respuesta (200 OK)">
+
+       ```json title="response.json"
+       [
+         {
+           "username": "juan",
+           "password": "juanpass",
+           "dni": "12345678D",
+           "name": "Juan",
+           "surnames": "Lopez Garcia",
+           "age": 31
+         },
+         {
+           "username": "jose",
+           "password": "josepass",
+           "dni": "12345678B",
+           "name": "Jose",
+           "surnames": "Perez Rodriguez",
+           "age": 33
+         },
+         {
+           "username": "javi",
+           "password": "javipass",
+           "dni": "12345678A",
+           "name": "Javier",
+           "surnames": "Criado Rodriguez",
+           "age": 35
+         }
+       ]
+       ```
+
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+### 2.2. Tabla HTML de usuarios
+
+<Steps>
+
+1. Crear la plantilla Thymeleaf
+
+   Se crea `usertemplate.html` en `src/main/resources/templates/` con la
+   directiva `th:each` de Thymeleaf para iterar sobre los usuarios y mostrar
+   una tabla HTML.
+
+   <RemoteCode
+     url={`${raw}src/main/resources/templates/usertemplate.html`}
+     lang="html"
+     title="usertemplate.html"
+   />
+
+2. Añadir los estilos CSS
+
+   Se crea `style.css` en `src/main/resources/static/css/` con estilos
+   para la tabla: fuente Roboto, bordes colapsados y colores alternos para
+   las filas pares.
+
+   <RemoteCode
+     url={`${raw}src/main/resources/static/css/style.css`}
+     lang="css"
+     title="style.css"
+   />
+
+   <Aside type="note">
+
+     El archivo CSS aplica estilos a la tabla: fuente Roboto, bordes colapsados,
+     y colores alternos para las filas pares.
+
+   </Aside>
+
+3. Crear el endpoint
+
+   Se crea el endpoint `GET /userstable` que devuelve el nombre de la
+   plantilla y Spring la renderiza con los datos del modelo.
+
+   <Aside type="note">
+
+     El endpoint `/userstable` devuelve el nombre de la plantilla Thymeleaf
+     `usertemplate`, que Spring renderiza pasando los datos del modelo.
+
+   </Aside>
+
+   <Image src={usersTableImage} alt="Tabla HTML de usuarios" loading="lazy" />
+
+</Steps>
+
+### 2.3. Usuario particular en formato JSON
+
+<Steps>
+
+1. Modificar el servicio
+
+   Se añade el método `getUserFromDB(String username)` a la interfaz
+   `UserService` y se implementa en `UserServiceImpl` usando
+   `PreparedStatement` con el parámetro `?` para evitar SQL injection.
+
+   <GitDiff
+     repo="aek676/dwsc-2026"
+     commitA="1f67d5b"
+     commitB="7be445c"
+     file="actividad4/src/main/java/es/dwsc/sampleprojectmicro/service/UserServiceImpl.java"
+     lang="java"
+   />
+
+   <Aside type="note">
+
+     Se utiliza `PreparedStatement` con parámetros para evitar SQL injection. El
+     método devuelve `null` si el usuario no existe en la base de datos.
+
+   </Aside>
+
+2. Modificar el controlador
+
+   Se añade el endpoint `GET /users/{username}` con `@PathVariable` y
+   `ResponseEntity` para devolver 200 OK si el usuario existe o 404 Not
+   Found si no existe.
+
+   <GitDiff
+     repo="aek676/dwsc-2026"
+     commitA="1f67d5b"
+     commitB="7be445c"
+     file="actividad4/src/main/java/es/dwsc/sampleprojectmicro/controller/UserController.java"
+     lang="java"
+   />
+
+   <Aside type="note">
+
+     La anotación `@PathVariable` extrae el valor de la variable `{username}` de
+     la URL. El código de estado HTTP se gestiona mediante `ResponseEntity`:
+
+     - `200 OK` si el usuario existe
+     - `404 Not Found` si el usuario no existe
+
+   </Aside>
+
+3. Comprobar el endpoint
+
+   Se puede comprobar el endpoint que devuelve un usuario particular
+   en formato JSON.
+
+   <Tabs>
+     <TabItem label="Petición">
+
+       ```bash title="Terminal"
+       curl -X GET http://localhost:8080/users/juan
+       ```
+
+     </TabItem>
+     <TabItem label="Respuesta (200 OK)">
+
+       ```json title="response.json"
+       {
+         "username": "juan",
+         "password": "juanpass",
+         "dni": "12345678D",
+         "name": "Juan",
+         "surnames": "Lopez Garcia",
+         "age": 31
+       }
+       ```
+
+     </TabItem>
+     <TabItem label="Respuesta (404 Not Found)">
+
+       La respuesta devuelve un código `404 Not Found` sin contenido
+       en el cuerpo de la respuesta.
+
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+### 2.4. Vista HTML de usuario
+
+<Steps>
+
+1. Modificar el controlador
+
+   Se añade el endpoint `GET /usertable/{username}` que obtiene los datos
+   del usuario y devuelve la plantilla `userview`.
+
+   <GitDiff
+     repo="aek676/dwsc-2026"
+     commitA="7be445c"
+     commitB="50b22e5"
+     file="actividad4/src/main/java/es/dwsc/sampleprojectmicro/controller/UserController.java"
+     lang="java"
+   />
+
+2. Crear la plantilla con Bootstrap
+
+   Se crea `userview.html` en `src/main/resources/templates/` utilizando
+   el tema Pulse de Bootstrap 5. La plantilla utiliza la clase
+   `table-primary` para diferenciar el estilo respecto a la tabla de la
+   tarea 2.
+
+   <RemoteCode
+     url={`${raw}src/main/resources/templates/userview.html`}
+     lang="html"
+     title="userview.html"
+   />
+
+   <Aside type="note">
+
+     La plantilla `userview.html` utiliza el tema Pulse de Bootstrap 5 para
+     mostrar los datos del usuario en una tabla con estilo `table-primary`.
+
+   </Aside>
+
+3. Captura de pantalla
+
+   <Image src={userHtmlImage} alt="Vista HTML de usuario" loading="lazy" />
+
+</Steps>
+
+### 2.5. Insertar usuarios
+
+<Steps>
+
+1. Modificar el script SQL
+
+   Se añade la restricción `UNIQUE` al campo `dni` en el script SQL
+   `init.sql` para que la base de datos impida valores duplicados.
+
+   <GitDiff
+     repo="aek676/dwsc-2026"
+     commitA="50b22e5"
+     commitB="fe8ac74c"
+     file="actividad4/src/main/resources/init.sql"
+     lang="sql"
+   />
+
+   <Aside type="note">
+
+     Se añade la restricción `UNIQUE` al campo `dni` para que la base de datos
+     impida valores duplicados. Esta validación también se realiza en el código
+     Java como capa adicional de seguridad.
+
+   </Aside>
+
+2. Modificar el servicio
+
+   Se añade el método `insertUser(User user)` a la interfaz `UserService` y
+   se implementa en `UserServiceImpl` verificando que ni el username ni el
+   DNI existan previamente en la base de datos.
+
+   <GitDiff
+     repo="aek676/dwsc-2026"
+     commitA="50b22e5"
+     commitB="fe8ac74c"
+     file="actividad4/src/main/java/es/dwsc/sampleprojectmicro/service/UserServiceImpl.java"
+     lang="java"
+   />
+
+   <Aside type="note">
+
+     El método realiza tres pasos:
+
+     1. Verificar si el nombre de usuario ya existe
+     2. Verificar si el DNI ya existe
+     3. Insertar el usuario si ambas verificaciones son negativas
+
+   </Aside>
+
+3. Modificar el controlador
+
+   Se añade el endpoint `POST /users` con `@RequestBody` y `ResponseEntity`
+   para devolver 200 OK si la inserción es exitosa o 400 Bad Request si el
+   username o DNI ya existen.
+
+   <GitDiff
+     repo="aek676/dwsc-2026"
+     commitA="50b22e5"
+     commitB="fe8ac74c"
+     file="actividad4/src/main/java/es/dwsc/sampleprojectmicro/controller/UserController.java"
+     lang="java"
+   />
+
+   <Aside type="note">
+
+     La anotación `@RequestBody` indica a Spring que deserialize el cuerpo de
+     la petición JSON en un objeto `User`. Los códigos de estado devueltos son:
+
+     - `200 OK` si la inserción es exitosa
+     - `400 Bad Request` si el username o DNI ya existen
+
+   </Aside>
+
+4. Comprobar el endpoint
+
+   Se puede comprobar el endpoint para insertar usuarios.
+
+   <Tabs>
+     <TabItem label="Petición (éxito)">
+
+       ```bash title="Terminal"
+       curl -X POST http://localhost:8080/users \
+         -H "Content-Type: application/json" \
+         -d '{"username":"maria","password":"mariapass","dni":"12345678X","name":"Maria","surnames":"Garcia Lopez","age":28}'
+       ```
+
+     </TabItem>
+     <TabItem label="Respuesta (200 OK)">
+
+       ```json title="response.json"
+       {
+         "message": "User created successfully"
+       }
+       ```
+
+     </TabItem>
+     <TabItem label="Respuesta (400 Bad Request)">
+
+       ```json title="error.json"
+       {
+         "error": "Username or DNI already exists"
+       }
+       ```
+
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+## 3. Ejecución del proyecto
+
+<Steps>
+
+1. Iniciar la base de datos PostgreSQL
+
+   Primero se inicia el servicio de PostgreSQL con el siguiente comando:
+
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Ejecutar la aplicación Spring Boot
+
+   A continuación se ejecuta la aplicación Spring Boot con el siguiente
+   comando:
+
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
+3. Acceder a los endpoints
+
+   Por último se pueden comprobar los endpoints:
+   - JSON lista: [`http://localhost:8080/users`](http://localhost:8080/users)
+   - Tabla HTML: [`http://localhost:8080/userstable`](http://localhost:8080/userstable)
+   - Usuario JSON: [`http://localhost:8080/users/juan`](http://localhost:8080/users/juan)
+   - Usuario HTML: [`http://localhost:8080/usertable/juan`](http://localhost:8080/usertable/juan)
+
+</Steps>
