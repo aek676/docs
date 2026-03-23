@@ -1,5 +1,6 @@
 ---
 import { Code } from '@astrojs/starlight/components';
+import { diffLines } from 'diff';
 
 interface Props {
   repo: string;
@@ -22,7 +23,6 @@ const [responseA, responseB] = await Promise.all([
 ]);
 
 let diffContent = '';
-
 let delLines: number[] = [];
 let insLines: number[] = [];
 
@@ -32,31 +32,32 @@ if (!responseA.ok || !responseB.ok) {
   const contentA = await responseA.text();
   const contentB = await responseB.text();
 
-  const linesA = contentA.split('\n');
-  const linesB = contentB.split('\n');
+  const changes = diffLines(contentA, contentB);
 
   const cleanLines: string[] = [];
-  const maxLength = Math.max(linesA.length, linesB.length);
+  let lineA = 1;
+  let lineB = 1;
+  let displayLine = 1;
 
-  for (let i = 0; i < maxLength; i++) {
-    const lineA = linesA[i];
-    const lineB = linesB[i];
+  for (const part of changes) {
+    const lines = part.value.split('\n').filter(l => l !== '');
 
-    if (lineA === undefined) {
-      cleanLines.push(lineB);
-      insLines.push(cleanLines.length);
-    } else if (lineB === undefined) {
-      cleanLines.push(lineA);
-      delLines.push(cleanLines.length);
-    } else if (lineA !== lineB) {
-      if (lineA.trim() !== '') {
-        cleanLines.push(lineA);
-        delLines.push(cleanLines.length);
+    for (const line of lines) {
+      if (part.removed) {
+        delLines.push(displayLine);
+        lineA++;
+        displayLine++;
+      } else if (part.added) {
+        cleanLines.push(line);
+        insLines.push(displayLine);
+        lineB++;
+        displayLine++;
+      } else {
+        cleanLines.push(line);
+        lineA++;
+        lineB++;
+        displayLine++;
       }
-      cleanLines.push(lineB);
-      insLines.push(cleanLines.length);
-    } else {
-      cleanLines.push(lineB);
     }
   }
 
