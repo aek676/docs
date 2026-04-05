@@ -1,0 +1,300 @@
+---
+title: Actividad 3 - Uso de funciones nativas en aplicaciones Ionic
+description: Aplicación Ionic que integra cámara, geolocalización y almacenamiento local para reportar incidencias con evidencia visual y geográfica.
+tags: [ionic, angular, capacitor, camera, geolocation, localstorage]
+---
+
+import { Steps, Aside, Tabs, TabItem, FileTree, Code } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import RemoteCode from "@/components/RemoteCode.astro";
+import { Home, NewIncidence, ShowIncidence } from "@/assets/dah/actividad3/img/";
+
+export const REPO_URL = `https://raw.githubusercontent.com/aek676/dah-2026/main/actividad3/`;
+
+Esta actividad consiste en crear una herramienta para que los usuarios informen de incidencias (desperfectos, problemas de mantenimiento, etc.) capturando evidencia visual y geográfica. Se utilizan plugins nativos de Capacitor para acceder a la cámara y a la geolocalización del dispositivo, y se almacenan los datos de forma persistente con localStorage.
+
+---
+
+## 1. Preparación del entorno
+
+Se añaden las dependencias de Capacitor para las plataformas nativas y los plugins de geolocalización:
+
+```bash
+npm install @capacitor/android
+npm install @capacitor/ios
+npm install @capacitor/geolocation
+```
+
+Se actualiza la configuración de Capacitor en `capacitor.config.ts` con el `appId` y `appName` del proyecto, y se excluyen los directorios `android/` e `ios/` del control de versiones.
+
+<Aside type="note">
+
+Desde hace un par de versiones, Ionic adoptó Capacitor como su motor por defecto para aplicaciones nativas, reemplazando al antiguo Cordova.
+
+</Aside>
+
+---
+
+## 2. Geolocalización del dispositivo
+
+Para obtener la geolocalización del dispositivo, se instala el plugin correspondiente y se sincroniza:
+
+```bash
+npm install @capacitor/geolocation
+npx cap sync
+```
+
+El objetivo de `npx cap sync` es sincronizar los archivos de origen del proyecto con los archivos nativos de la plataforma objetivo (como iOS y Android). Esto puede incluir la configuración de permisos necesarios en `Info.plist` para iOS o `AndroidManifest.xml` para Android.
+
+En un primer paso, se implementa la geolocalización directamente en la página principal, mostrando latitud, longitud y precisión en una tarjeta `ion-card`.
+
+<RemoteCode
+  url={`${REPO_URL}src/app/core/services/geolocation.service.ts`}
+  lang="typescript"
+  title="src/app/core/services/geolocation.service.ts"
+/>
+
+<Aside type="note">
+
+El método `Capacitor.isNativePlatform()` permite detectar si la aplicación se ejecuta en un dispositivo nativo (iOS/Android) o en un navegador. En plataformas nativas se usa `Geolocation.getCurrentPosition()` de Capacitor; en web se utiliza `navigator.geolocation.getCurrentPosition()` como fallback.
+
+</Aside>
+
+---
+
+## 3. Cámara del dispositivo
+
+Para utilizar la cámara del dispositivo, se instalan las dependencias necesarias:
+
+```bash
+npm install @ionic/pwa-elements
+npm install @capacitor/camera
+npx cap sync
+```
+
+El plugin Camera de Capacitor, para poder ejecutarlo en una página web, requiere la instalación de **PWA Elements**. Además, se modifica `src/main.ts` para inicializar los custom elements:
+
+<RemoteCode
+  url={`${REPO_URL}src/main.ts`}
+  lang="typescript"
+  title="src/main.ts"
+/>
+
+<Aside type="note">
+
+La operación `defineCustomElements(window)` permite el uso de algunos plugins de Capacitor (como Camera) cuando la aplicación se ejecuta como PWA en el navegador.
+
+</Aside>
+
+El servicio de cámara envuelve la API de Capacitor Camera:
+
+<RemoteCode
+  url={`${REPO_URL}src/app/core/services/camera.service.ts`}
+  lang="typescript"
+  title="src/app/core/services/camera.service.ts"
+/>
+
+<Aside type="note">
+
+Se utiliza `CameraResultType.Uri` para obtener la imagen como una URL de archivo en lugar de Base64. La comunicación entre la WebView y el Hardware se realiza a través de un Native Bridge donde toda información debe ser serializada en JSON. Las cadenas Base64 de imágenes de alta resolución pueden saturar la memoria de la WebView, por lo que siempre se priorizan las URLs de archivo.
+
+</Aside>
+
+---
+
+## 4. Refactorización de la estructura
+
+Una vez implementadas las funcionalidades de geolocalización y cámara en la página principal, se refactoriza la aplicación separando la lógica en tres páginas independientes y eliminando la cámara y geolocalización del home para mayor claridad.
+
+Se crean las rutas para las nuevas páginas en `app.routes.ts`:
+
+<RemoteCode
+  url={`${REPO_URL}src/app/app.routes.ts`}
+  lang="typescript"
+  title="src/app/app.routes.ts"
+/>
+
+<Aside type="note">
+
+### Estructura resultante
+
+- **`/home`**: Página de bienvenida con texto descriptivo y botones de navegación
+- **`/new-incidence`**: Página para crear una nueva incidencia
+- **`/incidence-list`**: Página para listar las incidencias reportadas
+
+Todas las rutas usan **lazy loading** mediante `loadComponent()` y la ruta vacía redirige a `/home`.
+
+</Aside>
+
+La página de inicio queda simplificada con un texto descriptivo y dos botones:
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/home/home.page.ts`}
+  lang="typescript"
+  title="src/app/features/home/home.page.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/home/home.page.html`}
+  lang="html"
+  title="src/app/features/home/home.page.html"
+/>
+
+---
+
+## 5. Modelo de datos
+
+Se define la interfaz TypeScript que representa una incidencia:
+
+<RemoteCode
+  url={`${REPO_URL}src/app/core/models/incidence.model.ts`}
+  lang="typescript"
+  title="src/app/core/models/incidence.model.ts"
+/>
+
+<Aside type="note">
+
+- `id`: Identificador único generado con `Date.now().toString()`
+- `photoUri`: URI de la imagen capturada por la cámara
+- `latitude` y `longitude`: Coordenadas GPS obtenidas mediante geolocalización
+- `timestamp`: Marca de tiempo Unix del momento de captura
+
+</Aside>
+
+---
+
+## 6. Servicio IncidenceService
+
+Se crea un servicio que gestiona las operaciones CRUD de incidencias utilizando `localStorage` para persistencia local:
+
+<RemoteCode
+  url={`${REPO_URL}src/app/core/services/incidence.service.ts`}
+  lang="typescript"
+  title="src/app/core/services/incidence.service.ts"
+/>
+
+<Aside type="note">
+
+### Métodos implementados
+
+1. **`getAll()`**: Recupera todas las incidencias almacenadas en `localStorage` bajo la clave `incidences`
+2. **`create(incidence)`**: Añade una nueva incidencia al array existente y lo guarda
+3. **`delete(id)`**: Filtra y elimina una incidencia por su ID
+
+El servicio está registrado con `providedIn: 'root'`, lo que lo mantiene vivo durante toda la navegación.
+
+</Aside>
+
+---
+
+## 7. Nueva Incidencia
+
+Se implementa la página para dar de alta una nueva incidencia. Permite capturar una foto desde la cámara del dispositivo, obtener automáticamente la geolocalización y guardar la incidencia de forma persistente.
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/new-incidence/new-incidence.page.ts`}
+  lang="typescript"
+  title="src/app/features/new-incidence/new-incidence.page.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/new-incidence/new-incidence.page.html`}
+  lang="html"
+  title="src/app/features/new-incidence/new-incidence.page.html"
+/>
+
+<Aside type="note">
+
+### Flujo de captura
+
+1. **Placeholder inicial**: Hasta que no se obtenga ninguna foto, se muestra un icono de cámara y un mensaje indicando que no se ha capturado ninguna foto
+2. **Captura simultánea**: Se utiliza `Promise.all` para ejecutar en paralelo la captura de foto (`CameraService`) y la obtención de geolocalización (`GeolocationService`)
+3. **Preview**: Tras la captura, se muestra la foto y debajo las coordenadas (latitud y longitud)
+4. **Guardado**: Al pulsar "Guardar Incidencia", se crea un objeto `Incidence` y se persiste con `IncidenceService`
+5. **Navegación automática**: Tras guardar, se redirige al listado de incidencias
+6. **Feedback visual**: Se utilizan `ToastController` para mostrar mensajes de éxito o error
+7. **Indicadores de carga**: Se muestran spinners mientras se captura o se guarda
+
+</Aside>
+
+---
+
+## 8. Listado de Incidencias
+
+Se implementa la página que muestra un listado de todas las incidencias reportadas. Si no hay incidencias guardadas, se muestran datos de prueba.
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/incidence-list/incidence-list.page.ts`}
+  lang="typescript"
+  title="src/app/features/incidence-list/incidence-list.page.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/incidence-list/incidence-list.page.html`}
+  lang="html"
+  title="src/app/features/incidence-list/incidence-list.page.html"
+/>
+
+<Aside type="note">
+
+### Características implementadas
+
+- **Datos de ejemplo**: Si no hay incidencias en `localStorage`, se muestran 3 incidencias de prueba con fotos y coordenadas de ciudades españolas
+- **DatePipe**: Formateo de timestamps con el pipe `date: 'dd/MM/yyyy HH:mm'`
+- **ion-thumbnail**: Miniaturas de imagen con bordes redondeados
+- **Toast "En construcción"**: Al interactuar con un elemento del listado, se muestra un mensaje de advertencia indicando que la funcionalidad de detalle está en desarrollo
+
+</Aside>
+
+---
+
+## 9. Ejecución del proyecto
+
+<Steps>
+
+1. Instalar dependencias
+
+   ```bash
+   npm install
+   ```
+
+2. Ejecutar en el navegador
+
+   ```bash
+   ionic serve
+   ```
+
+3. Esto abrirá la aplicación en el navegador por defecto en `http://localhost:8100`.
+
+</Steps>
+
+<Aside type="tip">
+
+Para probar en dispositivos nativos, es necesario añadir las plataformas y ejecutar:
+
+```bash
+npx cap add android
+npx cap add ios
+ionic build
+npx cap sync
+npx cap open android
+npx cap open ios
+```
+
+</Aside>
+
+---
+
+## 10. Capturas del diseño
+
+### Pantalla de Inicio
+
+<Image src={Home} alt="Pantalla de inicio con descripción y botones" width={300} />
+
+### Nueva Incidencia
+
+<Image src={NewIncidence} alt="Página de nueva incidencia con captura de foto" width={300} />
+
+### Listado de Incidencias
+
+<Image src={ShowIncidence} alt="Listado de incidencias con thumbnails" width={300} />
