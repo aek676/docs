@@ -1,0 +1,717 @@
+---
+title: Actividad 5 - Spring Data JPA y Spring Data REST
+description: En esta actividad se implementarán servicios REST utilizando Spring Data JPA y Spring Data REST con PostgreSQL.
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+import RemoteCode from "@/components/RemoteCode.astro";
+
+export const raw = `https://raw.githubusercontent.com/aek676/dwsc-2026/main/actividad5/`;
+
+El objetivo de esta actividad es desarrollar servicios REST utilizando **Spring Data JPA**
+y **Spring Data REST** con una base de datos PostgreSQL. Se implementarán dos proyectos:
+uno con una API REST personalizada y otro utilizando Spring Data REST para generar
+endpoints automáticamente.
+
+## 1. Base de datos
+
+### 1.1. Docker Compose
+
+Se utiliza Docker Compose para levantar el servicio de PostgreSQL:
+
+<RemoteCode url={`${raw}docker-compose.yml`} lang="yaml" title="docker-compose.yml" />
+
+El servicio de PostgreSQL se configura con:
+- **Imagen:** `postgres:18.3-alpine3.23`
+- **Base de datos:** `dwsc`
+- **Usuario:** `estudiante`
+- **Contraseña:** `estudiante`
+- **Puerto:** `5432:5432`
+
+### 1.2. Esquema de datos
+
+El esquema de datos se define en el script `init.sql`:
+
+<RemoteCode url={`${raw}init.sql`} lang="sql" title="init.sql" />
+
+Se crean tres tablas:
+
+- **student:** Alumnos con id, dni, name y surnames
+- **degree:** Titulaciones con id, code, name y programme
+- **student_degree:** Tabla relación Many-to-Many entre estudiantes y titulaciones
+
+### 1.3. Configuración de Hibernate
+
+La aplicación utiliza Hibernate con la propiedad `ddl-auto=update` para crear
+automáticamente las tablas a partir de las entidades JPA:
+
+```properties
+spring.jpa.hibernate.ddl-auto=update
+```
+
+<Aside type="note">
+
+Gracias a esta configuración, no es necesario crear las tablas manualmente.
+Hibernate las genera automáticamente al iniciar la aplicación.
+
+</Aside>
+
+## 2. Actividad 5 - JPA (API REST personalizada)
+
+El primer proyecto utiliza Spring Data JPA con controladores REST personalizados.
+
+### 2.1. Dependencias Maven
+
+<RemoteCode url={`https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-jpa/pom.xml`} lang="xml" title="pom.xml" />
+
+<Aside type="note">
+
+Las dependencias principales son:
+- `spring-boot-starter-data-jpa`: Persistencia con JPA
+- `spring-boot-starter-webmvc`: REST controllers
+- `postgresql`: Driver JDBC
+- `lombok`: Generación automática de getters/setters
+
+</Aside>
+
+### 2.2. Entidades JPA
+
+Se crean las entidades `Student` y `Degree` con una relación Many-to-Many:
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-jpa/src/main/java/es/ual/dwsc/actividad5/domain/Student.java"
+  lang="java"
+  title="Student.java"
+/>
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-jpa/src/main/java/es/ual/dwsc/actividad5/domain/Degree.java"
+  lang="java"
+  title="Degree.java"
+/>
+
+<Aside type="note">
+
+La entidad `Student` tiene una relación `@ManyToMany` con `Degree` mediante
+la tabla `student_degree`.
+
+</Aside>
+
+### 2.3. Repositorios
+
+Se utilizan interfaces `CrudRepository` con métodos de consulta personalizados:
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-jpa/src/main/java/es/ual/dwsc/actividad5/repository/StudentRepository.java"
+  lang="java"
+  title="StudentRepository.java"
+/>
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-jpa/src/main/java/es/ual/dwsc/actividad5/repository/DegreeRepository.java"
+  lang="java"
+  title="DegreeRepository.java"
+/>
+
+<Aside type="note">
+
+Spring Data JPA genera automáticamente las implementaciones de los repositorios
+a partir de las interfaces que extienden `CrudRepository`. Los métodos como
+`findByName` y `findByDni` se generan automáticamente por convención de nombres.
+
+</Aside>
+
+### 2.4. Controladores REST
+
+#### StudentController
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-jpa/src/main/java/es/ual/dwsc/actividad5/controller/StudentController.java"
+  lang="java"
+  title="StudentController.java"
+/>
+
+#### DegreeController
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-jpa/src/main/java/es/ual/dwsc/actividad5/controller/DegreeController.java"
+  lang="java"
+  title="DegreeController.java"
+/>
+
+### 2.5. Pruebas con curl
+
+### 2.5.1. Students
+
+<Tabs>
+  <TabItem label="GET /students">
+
+    **Listar todos los estudiantes**
+
+    ```bash title="Terminal"
+    curl -X GET http://localhost:8080/students
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    [
+      {
+        "id": 1,
+        "dni": "12345678V",
+        "name": "Carlos",
+        "surnames": "López Jiménez",
+        "degrees": [...]
+      },
+      {
+        "id": 2,
+        "dni": "12345678G",
+        "name": "César",
+        "surnames": "González García",
+        "degrees": [...]
+      }
+    ]
+    ```
+
+  </TabItem>
+  <TabItem label="GET /students/{name}">
+
+    **Buscar estudiante por nombre**
+
+    ```bash title="Terminal"
+    curl -X GET http://localhost:8080/students/Carlos
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "id": 1,
+      "dni": "12345678V",
+      "name": "Carlos",
+      "surnames": "López Jiménez",
+      "degrees": [...]
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="GET /students/dni/{dni}">
+
+    **Buscar estudiante por DNI**
+
+    ```bash title="Terminal"
+    curl -X GET http://localhost:8080/students/dni/12345678V
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "id": 1,
+      "dni": "12345678V",
+      "name": "Carlos",
+      "surnames": "López Jiménez",
+      "degrees": [...]
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="PUT /students/{dni}">
+
+    **Actualizar estudiante**
+
+    ```bash title="Terminal"
+    curl -X PUT http://localhost:8080/students/12345678V \
+      -H "Content-Type: application/json" \
+      -d '{"name": "Carlos Antonio", "surnames": "López García"}'
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "id": 1,
+      "dni": "12345678V",
+      "name": "Carlos Antonio",
+      "surnames": "López García",
+      "degrees": [...]
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="DELETE /students/{dni}">
+
+    **Eliminar estudiante**
+
+    ```bash title="Terminal"
+    curl -X DELETE http://localhost:8080/students/12345678V
+    ```
+
+    **Respuesta (204 No Content):**
+
+    Sin contenido en el cuerpo de la respuesta.
+
+  </TabItem>
+</Tabs>
+
+### 2.5.2. Degrees
+
+<Tabs>
+  <TabItem label="GET /degrees">
+
+    **Listar todas las titulaciones**
+
+    ```bash title="Terminal"
+    curl -X GET http://localhost:8080/degrees
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    [
+      {
+        "id": 1,
+        "code": "GRAD04015",
+        "name": "Grado en Ingeniería Informática",
+        "programme": "Plan 2015"
+      },
+      {
+        "id": 2,
+        "code": "MASTER7109",
+        "name": "Máster en Tecnologías y Aplicaciones en Ingeniería Informática",
+        "programme": null
+      }
+    ]
+    ```
+
+  </TabItem>
+  <TabItem label="GET /degrees/{code}">
+
+    **Buscar titulación por código**
+
+    ```bash title="Terminal"
+    curl -X GET http://localhost:8080/degrees/GRAD04015
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "id": 1,
+      "code": "GRAD04015",
+      "name": "Grado en Ingeniería Informática",
+      "programme": "Plan 2015"
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="PUT /degrees/{code}">
+
+    **Actualizar titulación**
+
+    ```bash title="Terminal"
+    curl -X PUT http://localhost:8080/degrees/GRAD04015 \
+      -H "Content-Type: application/json" \
+      -d '{"name": "Grado en Ingeniería Informática", "programme": "Plan 2020"}'
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "id": 1,
+      "code": "GRAD04015",
+      "name": "Grado en Ingeniería Informática",
+      "programme": "Plan 2020"
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="DELETE /degrees/{code}">
+
+    **Eliminar titulación**
+
+    ```bash title="Terminal"
+    curl -X DELETE http://localhost:8080/degrees/GRAD04015
+    ```
+
+    **Respuesta (204 No Content):**
+
+    Sin contenido en el cuerpo de la respuesta.
+
+  </TabItem>
+</Tabs>
+
+## 3. Actividad 5 - REST (Spring Data REST)
+
+El segundo proyecto utiliza **Spring Data REST** para generar automáticamente
+endpoints RESTful a partir de los repositorios JPA.
+
+### 3.1. Dependencias Maven
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-rest/pom.xml"
+  lang="xml"
+  title="pom.xml"
+/>
+
+<Aside type="note">
+
+Las dependencias específicas de Spring Data REST son:
+- `spring-boot-starter-data-rest`: Expone repositorios como API REST
+- `spring-data-rest-hal-explorer`: Interfaz visual para explorar la API
+
+</Aside>
+
+### 3.2. Entidades JPA
+
+Las entidades son similares a las del proyecto JPA, pero con `@JsonIgnore`
+para evitar referencias circulares en la relación Many-to-Many:
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-rest/src/main/java/es/ual/dwsc/actividad5_rest/domain/Student.java"
+  lang="java"
+  title="Student.java"
+/>
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-rest/src/main/java/es/ual/dwsc/actividad5_rest/domain/Degree.java"
+  lang="java"
+  title="Degree.java"
+/>
+
+### 3.3. Repositorios Spring Data REST
+
+Se utilizan interfaces que extienden `PagingAndSortingRepository`:
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-rest/src/main/java/es/ual/dwsc/actividad5_rest/repository/StudentRepository.java"
+  lang="java"
+  title="StudentRepository.java"
+/>
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/ba8169709f12ebb322ce8b70c41ac135eb75db11/actividad5/actividad5-rest/src/main/java/es/ual/dwsc/actividad5_rest/repository/DegreeRepository.java"
+  lang="java"
+  title="DegreeRepository.java"
+/>
+
+<Aside type="note">
+
+Spring Data REST genera automáticamente los endpoints REST a partir de los
+repositorios. No es necesario crear controladores.
+
+</Aside>
+
+### 3.4. Endpoints generados
+
+Spring Data REST genera automáticamente los siguientes endpoints:
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/students` | Listar todos los estudiantes (paginado) |
+| GET | `/students/{id}` | Obtener estudiante por ID |
+| POST | `/students` | Crear nuevo estudiante |
+| PUT | `/students/{id}` | Actualizar estudiante |
+| DELETE | `/students/{id}` | Eliminar estudiante |
+| GET | `/degrees` | Listar todas las titulaciones |
+| GET | `/degrees/{id}` | Obtener titulación por ID |
+
+### 3.5. Pruebas con curl
+
+### 3.5.1. Students
+
+<Tabs>
+  <TabItem label="GET /students">
+
+    **Listar estudiantes (HAL JSON)**
+
+    ```bash title="Terminal"
+    curl -X GET http://localhost:8080/students
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "_embedded": {
+        "students": [
+          {
+            "id": 1,
+            "dni": "12345678V",
+            "name": "Carlos",
+            "surnames": "López Jiménez"
+          },
+          {
+            "id": 2,
+            "dni": "12345678G",
+            "name": "César",
+            "surnames": "González García"
+          }
+        ]
+      },
+      "_links": {
+        "self": { "href": "http://localhost:8080/students" },
+        "profile": { "href": "http://localhost:8080/profile/students" }
+      }
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="POST /students">
+
+    **Crear estudiante**
+
+    ```bash title="Terminal"
+    curl -X POST http://localhost:8080/students \
+      -H "Content-Type: application/json" \
+      -d '{"dni": "12345678X", "name": "Ana", "surnames": "Martínez Sánchez"}'
+    ```
+
+    **Respuesta (201 Created):**
+
+    ```json
+    {
+      "id": 3,
+      "dni": "12345678X",
+      "name": "Ana",
+      "surnames": "Martínez Sánchez",
+      "_links": {
+        "self": { "href": "http://localhost:8080/students/3" },
+        "student": { "href": "http://localhost:8080/students/3" },
+        "degrees": { "href": "http://localhost:8080/students/3/degrees" }
+      }
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="PUT /students/{id}">
+
+    **Actualizar estudiante**
+
+    ```bash title="Terminal"
+    curl -X PUT http://localhost:8080/students/3 \
+      -H "Content-Type: application/json" \
+      -d '{"dni": "12345678X", "name": "Ana María", "surnames": "Martínez Sánchez"}'
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "id": 3,
+      "dni": "12345678X",
+      "name": "Ana María",
+      "surnames": "Martínez Sánchez",
+      "_links": {
+        "self": { "href": "http://localhost:8080/students/3" },
+        "student": { "href": "http://localhost:8080/students/3" },
+        "degrees": { "href": "http://localhost:8080/students/3/degrees" }
+      }
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="DELETE /students/{id}">
+
+    **Eliminar estudiante**
+
+    ```bash title="Terminal"
+    curl -X DELETE http://localhost:8080/students/3
+    ```
+
+    **Respuesta (204 No Content):**
+
+    Sin contenido en el cuerpo de la respuesta.
+
+  </TabItem>
+</Tabs>
+
+### 3.5.2. Degrees
+
+<Tabs>
+  <TabItem label="GET /degrees">
+
+    **Listar titulaciones (HAL JSON)**
+
+    ```bash title="Terminal"
+    curl -X GET http://localhost:8080/degrees
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "_embedded": {
+        "degrees": [
+          {
+            "id": 1,
+            "code": "GRAD04015",
+            "name": "Grado en Ingeniería Informática",
+            "programme": "Plan 2015"
+          },
+          {
+            "id": 2,
+            "code": "MASTER7109",
+            "name": "Máster en Tecnologías y Aplicaciones en Ingeniería Informática",
+            "programme": null
+          }
+        ]
+      },
+      "_links": {
+        "self": { "href": "http://localhost:8080/degrees" },
+        "profile": { "href": "http://localhost:8080/profile/degrees" }
+      }
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="POST /degrees">
+
+    **Crear titulación**
+
+    ```bash title="Terminal"
+    curl -X POST http://localhost:8080/degrees \
+      -H "Content-Type: application/json" \
+      -d '{"code": "GRAD04020", "name": "Grado en Ingeniería del Software", "programme": "Plan 2020"}'
+    ```
+
+    **Respuesta (201 Created):**
+
+    ```json
+    {
+      "id": 3,
+      "code": "GRAD04020",
+      "name": "Grado en Ingeniería del Software",
+      "programme": "Plan 2020",
+      "_links": {
+        "self": { "href": "http://localhost:8080/degrees/3" },
+        "degree": { "href": "http://localhost:8080/degrees/3" }
+      }
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="PUT /degrees/{id}">
+
+    **Actualizar titulación**
+
+    ```bash title="Terminal"
+    curl -X PUT http://localhost:8080/degrees/3 \
+      -H "Content-Type: application/json" \
+      -d '{"code": "GRAD04020", "name": "Grado en Ingeniería del Software", "programme": "Plan 2025"}'
+    ```
+
+    **Respuesta (200 OK):**
+
+    ```json
+    {
+      "id": 3,
+      "code": "GRAD04020",
+      "name": "Grado en Ingeniería del Software",
+      "programme": "Plan 2025",
+      "_links": {
+        "self": { "href": "http://localhost:8080/degrees/3" },
+        "degree": { "href": "http://localhost:8080/degrees/3" }
+      }
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="DELETE /degrees/{id}">
+
+    **Eliminar titulación**
+
+    ```bash title="Terminal"
+    curl -X DELETE http://localhost:8080/degrees/3
+    ```
+
+    **Respuesta (204 No Content):**
+
+    Sin contenido en el cuerpo de la respuesta.
+
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+
+Los endpoints de Spring Data REST utilizan el formato **HAL** (Hypertext Application Language),
+que incluye enlaces `_links` para navegar entre recursos relacionados.
+
+</Aside>
+
+## 4. Ejecución del proyecto
+
+<Steps>
+
+1. **Iniciar la base de datos PostgreSQL**
+
+   Se inicia el servicio de PostgreSQL con Docker Compose:
+
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Compilar y ejecutar actividad5-jpa**
+
+   ```bash
+   cd actividad5-jpa
+   ./mvnw spring-boot:run
+   ```
+
+3. **Compilar y ejecutar actividad5-rest**
+
+   ```bash
+   cd actividad5-rest
+   ./mvnw spring-boot:run
+   ```
+
+4. **Verificar los endpoints**
+
+   - actividad5-jpa: [`http://localhost:8080/students`](http://localhost:8080/students)
+   - actividad5-rest: [`http://localhost:8080/students`](http://localhost:8080/students)
+
+</Steps>
+
+## 5. Ejercicios
+
+### 5.1. La Base de Datos (El contenedor principal)
+
+Si estás utilizando un motor de base de datos tradicional 
+(como MySQL, PostgreSQL, SQL Server, etc.), Spring Boot 
+necesita un lugar al cual conectarse. Por defecto, tienes 
+que crear la base de datos en tu gestor antes de arrancar 
+la aplicación (por ejemplo, ejecutando `CREATE DATABASE mi_proyecto;`).
+
+Excepciones a esta regla:
+
+- **El truco de MySQL:** Si usas MySQL, puedes decirle al driver JDBC que cree la base de datos si no existe añadiendo un parámetro a tu URL en el archivo `application.properties`:
+
+  ```properties
+  spring.datasource.url=jdbc:mysql://localhost:3306/mi_proyecto?createDatabaseIfNotExist=true
+  ```
+
+- **Bases de datos en memoria (H2, HSQLDB):** Si usas una base de datos en memoria para pruebas o desarrollo, no tienes que crear absolutamente nada. Spring Boot la levanta en la memoria RAM y crea todo automáticamente al iniciar.
+
+### 5.2. ¿Tengo que crear cada tabla antes de poder acceder a ella?
+
+No, no es necesario crear las tablas manualmente. La propiedad de configuración
+`spring.jpa.hibernate.ddl-auto=update` indica a Hibernate que cree y actualice
+las tablas automáticamente a partir de las entidades JPA definidas en el código.
+
+### 5.3. ¿Puedo crear e inicializar un esquema de datos desde mi aplicación cuando la ejecuto por primera vez (o cada vez que se ejecuta)?
+
+Sí, es posible hacerlo de dos formas:
+
+1. **init.sql automático:** El script `init.sql` se monta en el directorio
+   `/docker-entrypoint-initdb.d/` del contenedor PostgreSQL, por lo que se
+   ejecuta automáticamente la primera vez que se crea la base de datos.
+
+2. **Hibernate con ddl-auto:** La propiedad `ddl-auto` de Hibernate puede tomar
+   diferentes valores:
+   - `none`: No se genera nada
+   - `update`: Se actualiza el esquema existente
+   - `create`: Se crea el esquema eliminando el anterior
+   - `create-drop`: Crea el esquema al iniciar y lo elimina al cerrar
+
+   Con `update`, Hibernate crea las tablas automáticamente si no existen.
