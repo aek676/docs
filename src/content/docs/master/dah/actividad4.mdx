@@ -1,0 +1,443 @@
+---
+title: Actividad 4 - Almacenamiento y recuperación de datos en aplicaciones Ionic
+description: Aplicación Ionic que integra Firebase Authentication y Cloud Firestore para gestionar productos con autenticación de usuarios y acceso controlado a datos.
+tags: [ionic, angular, firebase, authentication, firestore, cloud]
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import RemoteCode from "@/components/RemoteCode.astro";
+import GitDiff from "@/components/GitDiff.astro";
+import { HomeScreen, LoginScreen, ProductsScreen, AddProductScreen, PublicListScreen, ProductDetailScreen } from "@/assets/dah/actividad4/img/";
+
+export const REPO_URL = `https://raw.githubusercontent.com/aek676/dah-2026/main/actividad4/`;
+
+Esta actividad consiste en crear una aplicación Ionic que haga uso de Firebase para realizar el proceso de autenticación y disponer de una base de datos común para los usuarios de la aplicación. Cada usuario podrá gestionar sus propios productos, que se almacenarán en Cloud Firestore.
+
+## 1. Firebase y servicios utilizados
+
+Firebase es un servicio en la nube ofrecido por Google que facilita el desarrollo de aplicaciones. Para esta actividad se utilizan los siguientes servicios:
+
+- **Authentication**: Gestiona la autenticación de usuarios mediante correo electrónico y contraseña.
+- **Cloud Firestore**: Base de datos NoSQL en la nube para almacenar los productos asociados a cada usuario.
+- **Firebase Storage** (configurado pero no utilizado): Servicio para almacenar archivos binarios como imágenes.
+
+### 1.1. Tipos de bases de datos en Firebase
+
+<Tabs>
+  <TabItem label="Cloud Firestore">
+    La base de datos más reciente de Firebase. Utiliza un modelo de datos intuitivo con consultas ricas y rápidas, y escalamiento avanzado.
+  </TabItem>
+  <TabItem label="Realtime Database">
+    La base de datos original de Firebase. Solución eficiente y de baja latencia para apps que necesitan estados sincronizados en tiempo real.
+  </TabItem>
+</Tabs>
+
+Para esta actividad se utiliza **Cloud Firestore**.
+
+## 2. Configuración del proyecto Firebase
+
+### 2.1. Crear proyecto en Firebase
+
+1. Acceder a la [consola de Firebase](https://console.firebase.google.com/) con una cuenta de Google
+2. Crear un nuevo proyecto (por ejemplo, `dah-2026`)
+3. Añadir una aplicación web (`</>`) y obtener la configuración
+
+### 2.2. Configurar Authentication
+
+1. En la consola de Firebase, ir a **Authentication** > **Comenzar**
+2. Habilitar el método de autenticación por **correo electrónico/password**
+3. Crear usuarios de prueba en la pestaña **Users**
+
+### 2.3. Configurar Cloud Firestore
+
+1. Ir a **Firestore Database** > **Crear base de datos**
+2. Seleccionar modo de edición **Standard**
+3. Elegir ubicación en **Europa**
+4. Iniciar en **modo de prueba** (permite lectura/escritura)
+
+## 3. Configuración de la aplicación Ionic
+
+### 3.1. Crear proyecto e instalar dependencias
+
+```bash
+ionic start storeApp blank --type angular
+cd storeApp
+npm install firebase @angular/fire
+```
+
+### 3.2. Configurar environment
+
+<RemoteCode
+  url={`${REPO_URL}src/environments/environment.example.ts`}
+  lang="typescript"
+  title="src/environments/environment.ts"
+/>
+
+### 3.3. Configurar proveedores en main.ts
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="c6256a73"
+  commitB="2114ef70"
+  file="actividad4/src/main.ts"
+  lang="typescript"
+/>
+
+<Aside type="note">
+
+- `provideFirebaseApp`: Inicializa la aplicación Firebase con la configuración del entorno
+- `provideAuth`: Proporciona el servicio de autenticación
+- `provideFirestore`: Proporciona acceso a Cloud Firestore
+- `provideStorage`: Proporciona acceso a Firebase Storage
+
+</Aside>
+
+## 4. Modelo de datos
+
+Se define la interfaz TypeScript que representa un producto:
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="b79c78fd"
+  commitB="main"
+  file="actividad4/src/app/core/models/products.model.ts"
+  lang="typescript"
+/>
+
+<Aside type="note">
+
+- `id`: Identificador único del documento en Firestore
+- `name`: Nombre del producto
+- `description`: Descripción del producto
+- `imageUrl`: URL de la imagen del producto
+- `userId`: Identificador del usuario que creó el producto (para filtrado)
+
+</Aside>
+
+## 5. Servicios
+
+### 5.1. Servicio de autenticación (AuthService)
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="b79c78fd"
+  commitB="main"
+  file="actividad4/src/app/core/services/auth.service.ts"
+  lang="typescript"
+/>
+
+<Aside type="note">
+
+- `login(email, password)`: Inicia sesión con credenciales de Firebase
+- `logout()`: Cierra la sesión actual
+- `getUID()`: Obtiene el UID del usuario actual
+- `user$`: Observable que emite el usuario actual cuando cambia su estado
+- `currentUser`: Signal que mantiene el estado del usuario actual
+
+</Aside>
+
+### 5.2. Servicio de productos (ProductsService)
+
+<RemoteCode
+  url={`${REPO_URL}src/app/core/services/products.service.ts`}
+  lang="typescript"
+  title="src/app/core/services/products.service.ts"
+/>
+
+<Aside type="note">
+- `products`: Signal que contiene los productos del usuario autenticado (filtrados por userId)
+- `allProducts`: Signal que contiene todos los productos (sin filtrar, para el listado público)
+- `addProduct(product)`: Añade un nuevo producto asociado al usuario actual
+- `getProductById(id)`: Obtiene un producto específico por su ID
+- `deleteProduct(id)`: Elimina un producto de la base de datos
+</Aside>
+
+<Aside type="note">
+
+**Filtrado de productos por usuario**
+
+La clave para que un usuario acceda solo a sus productos es usar una **consulta con filtro**:
+```typescript
+const q = query(this.productsCollection, where('userId', '==', user.uid));
+```
+
+Esto garantiza que cada usuario solo vea los productos que ha creado.
+
+</Aside>
+
+<Aside type="note">
+
+**Actualización dinámica**
+
+El uso de **RxJS observables** y **Signals** permite que las listas se actualicen automáticamente cuando:
+- El usuario inicia o cierra sesión
+- Se añade un nuevo producto
+- Se elimina un producto
+
+</Aside>
+
+## 6. Páginas de la aplicación
+
+### 6.1. Página de inicio (Home)
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/home/home.page.ts`}
+  lang="typescript"
+  title="src/app/features/home/home.page.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/home/home.page.html`}
+  lang="html"
+  title="src/app/features/home/home.page.html"
+/>
+
+<Aside type="note">
+
+La página de inicio presenta dos botones:
+- **Acceso**: Navega a la página de login
+- **Inventario**: Navega al listado de productos en venta (público, sin autenticación)
+
+</Aside>
+
+### 6.2. Página de login
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="9864ba61"
+  commitB="14ee8abb"
+  file="actividad4/src/app/features/login/login.page.ts"
+  lang="typescript"
+/>
+
+<Aside type="note">
+
+La página implementa mensajes de error personalizados según el código de error de Firebase:
+
+- `auth/user-not-found`: "User does not exist in our records."
+- `auth/wrong-password`: "Incorrect password."
+- `auth/invalid-credential`: "Incorrect email or password."
+- `auth/too-many-requests`: "Too many failed attempts. Please try again later."
+
+</Aside>
+
+### 6.3. Página de productos (Mis Productos)
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/products/products.page.ts`}
+  lang="typescript"
+  title="src/app/features/products/products.page.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/products/products.page.html`}
+  lang="html"
+  title="src/app/features/products/products.page.html"
+/>
+
+<Aside type="note">
+
+Esta página muestra los productos del usuario autenticado. Utiliza el componente `product-list` con la propiedad `isClickable="true"` para permitir hacer clic en los productos y navegar a los detalles.
+
+</Aside>
+
+### 6.4. Página de añadir producto
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/add-product/add-product.page.ts`}
+  lang="typescript"
+  title="src/app/features/add-product/add-product.page.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/add-product/add-product.page.html`}
+  lang="html"
+  title="src/app/features/add-product/add-product.page.html"
+/>
+
+<Aside type="note">
+
+Permite añadir productos proporcionando nombre, descripción y URL de imagen. El producto se asocia automáticamente al usuario actual mediante el `userId`.
+
+</Aside>
+
+### 6.5. Página de listado público (Products List)
+
+Muestra todos los productos disponibles en la base de datos (sin filtrar por usuario). Es accesible sin autenticación.
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/products-list/products-list.page.ts`}
+  lang="typescript"
+  title="src/app/features/products-list/products-list.page.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/products-list/products-list.page.html`}
+  lang="html"
+  title="src/app/features/products-list/products-list.page.html"
+/>
+
+### 6.6. Página de detalles de producto
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="7ae6023b"
+  commitB="5e0a7db5"
+  file="actividad4/src/app/features/product-details/product-details.page.ts"
+  lang="typescript"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/features/product-details/product-details.page.html`}
+  lang="html"
+  title="src/app/features/product-details/product-details.page.html"
+/>
+
+<Aside type="note">
+
+Esta página muestra los detalles de un producto y permite eliminarlo mediante un diálogo de confirmación. Utiliza el ID del producto obtenido de los parámetros de la ruta.
+
+</Aside>
+
+### 6.7. Componente Product List
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="aa5cdac1"
+  commitB="aa5cdac1"
+  file="actividad4/src/app/shared/components/product-list/product-list.component.ts"
+  lang="typescript"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}src/app/shared/components/product-list/product-list.component.html`}
+  lang="html"
+  title="src/app/shared/components/product-list/product-list.component.html"
+/>
+
+<Aside type="note">
+
+Componente reutilizable que muestra una lista de productos. Soporta:
+- `products`: Array de productos a mostrar
+- `isClickable`: Si es true, los productos son clicables y navegan a su detalle
+- `emptyMessage`: Mensaje a mostrar cuando no hay productos
+
+</Aside>
+
+## 7. Rutas de la aplicación
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="652b91ed"
+  commitB="ba564871"
+  file="actividad4/src/app/app.routes.ts"
+  lang="typescript"
+/>
+
+<Aside type="note">
+
+- `/home`: Página de inicio
+- `/login`: Página de autenticación
+- `/products`: Productos del usuario autenticado (protegida)
+- `/add-product`: Añadir nuevo producto
+- `/products-list`: Listado público de productos
+- `/product-details/:id`: Detalles de un producto específico
+
+Todas las rutas utilizan **lazy loading** mediante `loadComponent()`.
+
+</Aside>
+
+## 8. Respuestas a las preguntas del ejercicio
+
+### 8.1. ¿Cómo se consigue que un usuario acceda solo a los productos que él ha creado?
+
+Se utiliza una **consulta filtrada** en Cloud Firestore:
+
+```typescript
+const q = query(
+  this.productsCollection, 
+  where('userId', '==', user.uid)
+);
+```
+
+Cada producto se almacena con un campo `userId` que corresponde al UID del usuario que lo creó. Al realizar la consulta con este filtro, solo se obtienen los productos asociados a ese usuario.
+
+### 8.2. ¿Cómo se consigue que las listas de productos se actualicen dinámicamente?
+
+Se utiliza **programación reactiva con RxJS y Signals**:
+
+- El servicio `ProductsService` define un `Observable` (`products$`) que emite valores cuando cambia el estado de autenticación
+- Se convierte el observable a un `Signal` mediante `toSignal()` para usarlo en la plantilla
+- Cuando se añade o elimina un producto, el observable emite nuevos valores automáticamente
+- Angular detecta los cambios y actualiza la vista automáticamente
+
+### 8.3. ¿Cómo se podrían crear nuevos usuarios desde la aplicación Ionic?
+
+Agregando el método `createUserWithEmailAndPassword` al `AuthService`:
+
+```typescript
+import { createUserWithEmailAndPassword } from '@angular/fire/auth';
+
+async register(email: string, password: string) {
+  return createUserWithEmailAndPassword(this.auth, email, password);
+}
+```
+
+Y en el componente de registro:
+
+```typescript
+await this.authService.register(email, password);
+```
+
+<Aside type="note">
+
+Esto permite que los usuarios se registren directamente desde la aplicación sin necesidad de crearlos manualmente en la consola de Firebase.
+
+</Aside>
+
+## 9. Ejecución del proyecto
+
+<Steps>
+
+1. Instalar dependencias
+
+   ```bash
+   npm install
+   ```
+
+2. Ejecutar en el navegador
+
+   ```bash
+   ionic serve
+   ```
+
+3. Esto abrirá la aplicación en `http://localhost:8100`.
+
+</Steps>
+
+## 11. Capturas del diseño
+
+### Pantalla de Inicio
+
+<Image src={HomeScreen} alt="Pantalla de inicio" width={300} />
+
+### Página de Login
+
+<Image src={LoginScreen} alt="Página de login" width={300} />
+
+### Mis Productos
+
+<Image src={ProductsScreen} alt="Listado de productos del usuario" width={300} />
+
+### Añadir Producto
+
+<Image src={AddProductScreen} alt="Formulario para añadir producto" width={300} />
+
+### Listado Público
+
+<Image src={PublicListScreen} alt="Listado público de productos" width={300} />
+
+### Detalle de Producto
+
+<Image src={ProductDetailScreen} alt="Detalles de un producto" width={300} />
