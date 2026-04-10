@@ -1,0 +1,385 @@
+---
+title: Actividad 6 - Microservicios con Spring Cloud Config
+description: Implementación de microservicios Spring Boot con configuración centralizada, JDBC y JPA
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import RemoteCode from "@/components/RemoteCode.astro";
+import GitDiff from "@/components/GitDiff.astro";
+import { managerUsersSwagger, managerStudentsSwagger } from "@/assets/dwsc/actividad6/";
+
+export const raw = `https://raw.githubusercontent.com/aek676/dwsc-2026/main/actividad6/`;
+
+El objetivo de esta actividad es desarrollar una arquitectura de microservicios utilizando
+**Spring Boot** con **Spring Cloud Config** para la configuración centralizada.
+Se implementan dos microservicios: uno que utiliza JDBC puro y otro que utiliza
+JPA con relaciones ManyToMany.
+
+## 1. Arquitectura del Proyecto
+
+El proyecto está formado por los siguientes componentes:
+
+| Componente | Puerto | Tecnología |
+|------------|--------|-------------|
+| Config Server | 8888 | Spring Cloud Config |
+| Manager Users | 8081 | JDBC puro |
+| Manager Students | 8082 | JPA + Spring Data |
+
+<Aside type="note">
+
+La configuración centralizada permite gestionar los parámetros de todos
+los microservicios desde un repositorio Git externo, facilitando el mantenimiento
+y los despliegues.
+
+</Aside>
+
+## 2. Docker Compose
+
+Se utilizan dos contenedores PostgreSQL, uno para cada microservicio:
+
+<RemoteCode
+  url={`${raw}docker-compose.yml`}
+  lang="yaml"
+  title="docker-compose.yml"
+/>
+
+### 2.1. Base de datos de usuarios
+
+Se crea un script SQL para inicilizar la base de datos
+de usuarios con una tabla `sampleusers` y algunos registros de ejemplo:
+
+<RemoteCode
+  url={`${raw}init-users.sql`}
+  lang="sql"
+  title="init-users.sql"
+/>
+
+### 2.2. Base de datos de estudiantes
+
+Se crear un script SQL para inicilizar la base de datos con una tabla `students`
+con una relación ManyToMany con una tabla `degrees`, y algunos registros de ejemplo:
+
+<RemoteCode
+  url={`${raw}init-students.sql`}
+  lang="sql"
+  title="init-students.sql"
+/>
+
+## 3. Config Server
+
+El servidor de configuración centraliza las propiedades de todos los microservicios:
+
+### 3.1. Aplicación principal
+
+Habilitamos el servidor de configuración con la anotación `@EnableConfigServer` en la clase principal:
+
+<RemoteCode
+  url={`${raw}config-server/src/main/java/es/ual/config_server/ConfigServerApplication.java`}
+  lang="java"
+  title="ConfigServerApplication.java"
+  mark={['@EnableConfigServer']}
+/>
+
+### 3.2. Configuración
+
+Para la configuración del Config Server, se utiliza un repositorio
+Git que contiene las propiedades de cada microservicio, donde se almacenan en el
+repositorio marcado en la rama **main** en la carpeta `actividad6/config-repo`:
+
+<RemoteCode
+  url={`${raw}config-server/src/main/resources/application.properties`}
+  lang="properties"
+  title="application.properties"
+/>
+
+### 3.3. Propiedades externas
+
+Esta sería la configuración para el microservicio de manager-users
+donde definimos tanto su puerto, conexión a la base de datos con JDBC
+y los metadatos para la ducumentación OpenAPI:
+
+<RemoteCode
+  url={`${raw}config-repo/manager-users.properties`}
+  lang="properties"
+  title="manager-users.properties"
+/>
+
+La configuración para el microservicio de manager-students, donde definimos su puerto,
+la conexión a la base de datos con JPA y los metadatos para la ducumentación OpenAPI:
+
+<RemoteCode
+  url={`${raw}config-repo/manager-students.properties`}
+  lang="properties"
+  title="manager-students.properties"
+/>
+
+### 3.4. Endpoints del Config Server
+
+| Endpoint | Descripción |
+|----------|-------------|
+| `http://localhost:8888/actuator/health` | Estado del servidor |
+| `http://localhost:8888/application/default` | Configuración por defecto |
+| `http://localhost:8888/manager-users/default` | Configuración de manager-users |
+| `http://localhost:8888/manager-students/default` | Configuración de manager-students |
+
+## 4. Manager Users (JDBC)
+
+Este microservicio utiliza JDBC puro para acceder a la base de datos, sin ORM.
+
+### 4.1. Dependencias Maven
+
+<RemoteCode
+  url={`${raw}manager-users/pom.xml`}
+  lang="xml"
+  title="pom.xml"
+/>
+
+### 4.2. Dominio
+
+<RemoteCode
+  url={`${raw}manager-users/src/main/java/es/ual/manager_users/domain/User.java`}
+  lang="java"
+  title="User.java"
+/>
+
+<RemoteCode
+  url={`${raw}manager-users/src/main/java/es/ual/manager_users/domain/Users.java`}
+  lang="java"
+  title="Users.java"
+/>
+
+### 4.3. Servicio
+
+<RemoteCode
+  url={`${raw}manager-users/src/main/java/es/ual/manager_users/service/UserService.java`}
+  lang="java"
+  title="UserService.java"
+/>
+
+<RemoteCode
+  url={`${raw}manager-users/src/main/java/es/ual/manager_users/service/UserServiceImpl.java`}
+  lang="java"
+  title="UserServiceImpl.java"
+/>
+
+### 4.4. Controlador
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/fcbe60fe23112887d8b22e408eb10c18787db405/actividad6/manager-users/src/main/java/es/ual/manager_users/controller/UserController.java"
+  lang="java"
+  title="UserController.java"
+/>
+
+### 4.5. Documentación OpenAPI
+
+Documentación añadida a `UserController` y remplazamos el `@Controller` por `@RestController`:
+
+<GitDiff
+  repo="aek676/dwsc-2026"
+  commitA="fcbe60fe23112887d8b22e408eb10c18787db405"
+  commitB="087e36d7f2800650a347776f36289f7e74685a02"
+  file="actividad6/manager-users/src/main/java/es/ual/manager_users/controller/UserController.java"
+  lang="java"
+/>
+
+La configuración de OpenAPI se realiza en una clase de configuración donde se 
+definen los metadatos del API que se congieran desde el Config Server:
+
+<RemoteCode
+  url={`${raw}manager-users/src/main/java/es/ual/manager_users/config/OpenApiConfig.java`}
+  lang="java"
+  title="OpenApiConfig.java"
+ />
+
+### 4.6. Endpoints
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | /users | Obtener todos los usuarios |
+| GET | /users/\{username\} | Obtener usuario por username |
+| POST | /users | Crear nuevo usuario |
+
+### 4.7. Swagger UI
+
+**URL:** [`http://localhost:8081/swagger-ui.html`](http://localhost:8081/swagger-ui.html)
+
+<Image src={managerUsersSwagger} alt="Swagger UI - Manager Users" />
+
+## 5. Manager Students (JPA)
+
+Este microservicio utiliza JPA con Spring Data para acceder a la base de datos,
+implementando relaciones ManyToMany entre estudiantes y titulaciones.
+
+### 5.1. Dependencias Maven
+
+<RemoteCode
+  url={`${raw}manager-students/pom.xml`}
+  lang="xml"
+  title="pom.xml"
+/>
+
+### 5.2. Dominio
+
+<RemoteCode
+  url={`${raw}manager-students/src/main/java/es/ual/manager_students/domain/Student.java`}
+  lang="java"
+  title="Student.java"
+/>
+
+<RemoteCode
+  url={`${raw}manager-students/src/main/java/es/ual/manager_students/domain/Degree.java`}
+  lang="java"
+  title="Degree.java"
+/>
+
+### 5.3. Repositorio
+
+<RemoteCode
+  url={`${raw}manager-students/src/main/java/es/ual/manager_students/repository/StudentRepository.java`}
+  lang="java"
+  title="StudentRepository.java"
+/>
+
+<RemoteCode
+  url={`${raw}manager-students/src/main/java/es/ual/manager_students/repository/DegreeRepository.java`}
+  lang="java"
+  title="DegreeRepository.java"
+/>
+
+### 5.4. Controlador
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/fcbe60fe23112887d8b22e408eb10c18787db405/actividad6/manager-students/src/main/java/es/ual/manager_students/controller/StudentController.java"
+  lang="java"
+  title="StudentController.java"
+/>
+
+<RemoteCode
+  url="https://raw.githubusercontent.com/aek676/dwsc-2026/fcbe60fe23112887d8b22e408eb10c18787db405/actividad6/manager-students/src/main/java/es/ual/manager_students/controller/DegreeController.java"
+  lang="java"
+  title="DegreeController.java"
+/>
+
+### 5.5. Documentación OpenAPI
+
+Documentación añadida a `StudentController`:
+
+<GitDiff
+  repo="aek676/dwsc-2026"
+  commitA="fcbe60fe23112887d8b22e408eb10c18787db405"
+  commitB="087e36d7f2800650a347776f36289f7e74685a02"
+  file="actividad6/manager-students/src/main/java/es/ual/manager_students/controller/StudentController.java"
+  lang="java"
+/>
+
+Documentación añadida a `DegreeController`:
+
+<GitDiff
+  repo="aek676/dwsc-2026"
+  commitA="fcbe60fe23112887d8b22e408eb10c18787db405"
+  commitB="087e36d7f2800650a347776f36289f7e74685a02"
+  file="actividad6/manager-students/src/main/java/es/ual/manager_students/controller/DegreeController.java"
+  lang="java"
+/>
+
+La configuración de OpenAPI se realiza en una clase de configuración donde se 
+definen los metadatos del API que se congieran desde el Config Server:
+
+<RemoteCode
+  url={`${raw}manager-students/src/main/java/es/ual/manager_students/config/OpenApiConfig.java`}
+  lang="java"
+  title="OpenApiConfig.java"
+/>
+
+### 5.6. Endpoints
+
+#### Students
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | /students | Obtener todos los estudiantes |
+| GET | /students/\{name\} | Buscar estudiante por nombre |
+| GET | /students/dni/\{dni\} | Buscar estudiante por DNI |
+| PUT | /students/\{dni\} | Actualizar estudiante |
+| DELETE | /students/\{dni\} | Eliminar estudiante |
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | /degrees | Obtener todas las titulaciones |
+| GET | /degrees/\{code\} | Buscar titulación por código |
+| PUT | /degrees/\{code\} | Actualizar titulación |
+| DELETE | /degrees/\{code\} | Eliminar titulación |
+
+### 5.7. Swagger UI
+
+**URL:** [`http://localhost:8082/swagger-ui.html`](http://localhost:8082/swagger-ui.html)
+
+<Image src={managerStudentsSwagger} alt="Swagger UI - Manager Students" />
+
+## 6. Ejecución del proyecto
+
+<Steps>
+
+1. **Iniciar las bases de datos**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Compilar el Config Server**
+
+   ```bash
+   cd config-server
+   ./mvnw clean package -DskipTests
+   ```
+
+3. **Compilar Manager Users**
+
+   ```bash
+   cd manager-users
+   ./mvnw clean package -DskipTests
+   ```
+
+4. **Compilar Manager Students**
+
+   ```bash
+   cd manager-students
+   ./mvnw clean package -DskipTests
+   ```
+
+5. **Ejecutar los servicios**
+
+   Ejecutar en terminals separadas:
+
+   ```bash
+   # Terminal 1: Config Server
+   cd config-server
+   ./mvnw spring-boot:run
+
+   # Terminal 2: Manager Users
+   cd manager-users
+   ./mvnw spring-boot:run
+
+   # Terminal 3: Manager Students
+   cd manager-students
+   ./mvnw spring-boot:run
+   ```
+
+6. **Verificar los servicios**
+
+   - Config Server: [`http://localhost:8888/actuator/health`](http://localhost:8888/actuator/health)
+   - Manager Users: [`http://localhost:8081/swagger-ui.html`](http://localhost:8081/swagger-ui.html)
+   - Manager Students: [`http://localhost:8082/swagger-ui.html`](http://localhost:8082/swagger-ui.html)
+
+</Steps>
+
+## 7. Resumen de puertos
+
+| Servicio | Puerto |
+|----------|--------|
+| Config Server | 8888 |
+| Manager Users | 8081 |
+| Manager Students | 8082 |
+| PostgreSQL Users | 5432 |
+| PostgreSQL Students | 5433 |
