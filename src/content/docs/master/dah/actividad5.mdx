@@ -1,0 +1,292 @@
+---
+title: Actividad 5 - Pruebas en aplicaciones Ionic
+description: Aplicación Ionic que implementa pruebas unitarias con Jasmine/Karma y pruebas E2E y de componentes con Cypress.
+tags: [ionic, angular, testing, jasmine, karma, cypress, e2e, unit-tests]
+---
+
+import { Steps, Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Image } from "astro:assets";
+import RemoteCode from "@/components/RemoteCode.astro";
+import GitDiff from "@/components/GitDiff.astro";
+
+export const REPO_URL = `https://raw.githubusercontent.com/aek676/dah-2026/main/actividad5/`;
+
+Esta actividad consiste en implementar pruebas en una aplicación Ionic existente. La aplicación de ejemplo es un sistema de gestión de salón de belleza que permite gestionar clientes, reservas y productos. Se implementan pruebas unitarias utilizando Jasmine con Karma, pruebas de componentes con Cypress y pruebas E2E (end-to-end) con Cypress.
+
+## 1. Tipos de pruebas en aplicaciones híbridas
+
+Al igual que en el desarrollo de cualquier software, una aplicación híbrida debe ser sometida durante su desarrollo a un proceso de pruebas, preferiblemente mediante una aproximación de integración continua que favorezca un desarrollo ágil y flexible.
+
+Entre los diferentes tipos de pruebas que podemos ejecutar sobre nuestras aplicaciones híbridas se encuentran:
+
+- **Pruebas unitarias**: se realizan sobre cada componente desarrollado para probar pequeñas unidades de código que están aisladas de otras partes o subsistemas de la aplicación.
+- **Pruebas de integración**: se realizan para probar el comportamiento de dos o más componentes que tienen algún tipo de relación durante la ejecución de cierta funcionalidad. También se pueden realizar pruebas de integración para probar el comportamiento de un componente con respecto a un servicio o a una parte del sistema que no es visible para el usuario.
+- **Pruebas de interfaz de usuario o end-to-end (E2E)**: se realizan desde el front-end y con el objetivo de satisfacer las necesidades de negocio de dicho front-end. Para ello, se intenta simular la interacción de un usuario que hace uso de la aplicación, evaluando los resultados obtenidos.
+
+Para esta sesión, utilizaremos Jasmine con Karma para las pruebas unitarias, y Cypress para las pruebas unitarias, pruebas de integración entre componentes, y de interfaz de usuario (E2E).
+
+### 1.1. Pruebas unitarias
+
+Las pruebas unitarias tienen el objetivo de probar pequeñas unidades de código de forma aislada. La propia naturaleza de las aplicaciones híbridas desarrolladas con Ionic y Angular favorecen este tipo de pruebas debido a su construcción modular.
+
+La escritura adicional del código para la ejecución de pruebas unitarias favorece no solo la verificación del código en el momento que se está desarrollando, sino que también sirve para la ejecución de pruebas de regresión cuando se realiza alguna modificación en otras partes de la aplicación. De forma adicional, el código de las pruebas unitarias sirve como parte de la documentación del software.
+
+Para la ejecución de las pruebas unitarias, vamos a hacer uso de Cypress y también revisaremos cómo poder llevar a cabo este tipo de pruebas con Jasmine. Anteriormente, las pruebas implementadas con Jasmine se ejecutaban con Karma, aunque ahora se recomienda migrar a soluciones más modernas como Web Test Runner o Vitest.
+
+### 1.2. Pruebas end-to-end
+
+Las pruebas E2E se centran en detectar aquellos errores que ponen en peligro los objetivos de negocio de una aplicación híbrida, tratando de poner de manifiesto errores ocultos que no son detectados por las pruebas unitarias, errores generados por una mala definición del flujo funcional o errores que provienen de la comunicación entre partes o subsistemas de la aplicación.
+
+Mediante este tipo de pruebas, se puede simular la interacción de un ratón o de un teclado para generar eventos que afecten a la aplicación. También se puede comprobar si son visibles algunos elementos de la vista o determinar si la posición es correcta. Se pueden validar si están disponibles algunas acciones, si el tiempo de respuesta es el correcto o si otras medidas de rendimiento son adecuadas.
+
+Las herramientas de pruebas E2E suelen hacer uso de tecnologías basadas en Javascript para poder simular la interacción que el usuario lleva a cabo mediante el navegador web en el que se ejecuta la aplicación híbrida. Para la ejecución de las pruebas E2E, vamos a hacer uso de Cypress, aunque anteriormente se llevaban a cabo mediante el uso de Protractor.
+
+## 2. Uso de Jasmine para la ejecución de pruebas unitarias
+
+Para la ejecución de las pruebas unitarias, Jasmine se utiliza para la implementación de los tests, mientras que Karma, Web Test Runner o Vitest se utilizan para la ejecución de dichos tests.
+
+ Tenemos en cuenta la sintaxis descriptiva de Jasmine:
+
+- **describe**: equivalente a una colección (suite) de pruebas.
+- **it**: equivalente a una prueba específica (test) que debe ser contenida por una colección de pruebas.
+- **expect**: equivalente a una comprobación o aserción (assert) que debe ser contenida por una prueba.
+
+Aunque la construcción de las pruebas es similar para cada elemento de una aplicación Ionic, vamos a distinguir cómo se construyen los tests para el caso de los servicios y cómo deben implementarse las pruebas en el caso de los componentes.
+
+### 2.1. Prueba de servicios y proveedores de servicios
+
+Para analizar la prueba unitaria de servicios, vamos a modificar la implementación del archivo de pruebas `generate-text.service.spec.ts` que se genera de forma automática:
+
+<RemoteCode
+  url={`${REPO_URL}src/app/core/services/generate-text.service.ts`}
+  lang="typescript"
+  title="src/app/core/services/generate-text.service.ts"
+/>
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="aee438b9"
+  commitB="60f11105"
+  file="actividad5/src/app/core/services/generate-text.service.spec.ts"
+  lang="typescript"
+/>
+
+<Aside type="note">
+
+- `words`: Lista con palabras de ejemplo
+- `getWords()`: Devuelve el array completo de palabras
+- `getRandomWord()`: Devuelve una palabra aleatoria del array
+- `getRandomInt()`: Genera un número aleatorio en un rango dado
+
+</Aside>
+
+### 2.2. Prueba de componentes
+
+La prueba de componentes requiere la realización de comprobaciones tanto en la clase TypeScript que lo define como en la plantilla HTML. Para ello, se hace uso de un entorno de pruebas que incluye los diferentes elementos requeridos durante la ejecución de dicho componente. Este entorno de pruebas recibe el nombre de TestBed.
+
+Enquanto que se realiza la prueba de este componente, el acceso al mismo se realiza a través de un manejador (fixture) que permite hacer referencia a una instancia de dicho componente (`fixture.componentInstance`). Para acceder a los elementos del DOM, se hará uso de `fixture.nativeElement`.
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="5f0a377d"
+  commitB="60f11105"
+  file="actividad5/src/app/features/home/home.page.ts"
+  lang="typescript"
+/>
+
+<GitDiff
+  repo="aek676/dah-2026"
+  commitA="5f0a377d"
+  commitB="5f0a377d"
+  file="actividad5/src/app/features/home/home.page.spec.ts"
+  lang="typescript"
+/>
+
+<Aside type="note">
+
+El componente HomePage utiliza:
+- `signal()`: Para el título que se muestra en la vista
+- `model()`: Para la palabra que puede ser modificada por el usuario
+- `inject()`: Para inyectar el servicio GenerateTextService
+
+</Aside>
+
+### 2.3. Ejecución de las pruebas unitarias
+
+Para la ejecución de las pruebas unitarias de la aplicación, debemos ejecutar el siguiente comando:
+
+```bash
+npm test
+```
+
+Como resultado, se desplegará un servidor de Karma para ejecutar y visualizar el resultado de las pruebas realizadas:
+
+```
+Karma v 6.4.4 - connected; test: complete;
+Chrome 146.0.0.0 (Windows 10) is idle
+Jasmine 4.6.1
+9 specs, 0 failures, randomized with seed 45285
+GenerateTextService
+  should do nothing
+  should have "DAH' and 'service' in the list of words
+  should return a random word as a string
+  should be created
+  should return a non-empty array
+AppComponent
+  should create the app
+HomePage
+  should update the word in the DOM when button clicked.
+  initialize the title from signal
+  should update the title in the DOM when changeTitle is called
+Finished in 0.1295
+```
+
+Si alguna de las pruebas falla, se nos mostrará información sobre la causa que ha provoca el fallo.
+
+## 3. Uso de Cypress para la ejecución de pruebas unitarias
+
+Cypress es una herramienta que permite la automatización de pruebas de extremo a extremo (E2E) y de integración. Además, permite la realización de pruebas unitarias. Para la ejecución de pruebas unitarias con Cypress, se debe instalar la dependencia en el proyecto:
+
+```bash
+npm install -D cypress
+```
+
+Una vez instalada, se puede ejecutar la herramienta con el siguiente comando:
+
+```bash
+npx cypress open
+```
+
+En la ventana de configuración que se abre, seleccionaremos la opción Component Testing. A continuación, debemos seleccionar el framework de desarrollo utilizado para el front-end. En este caso, seleccionaremos Angular y avanzaremos en la configuración mediante Next step. Se nos informará sobre las dependencias necesarias y seleccionaremos Continue.
+
+Si ocurre un error debido a la ruta de la aplicación, se debe modificar el archivo `cypress.config.ts` para configurar a mano la ruta:
+
+<RemoteCode
+  url={`${REPO_URL}cypress.config.ts`}
+  lang="typescript"
+  title="cypress.config.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}cypress/support/component.ts`}
+  lang="typescript"
+  title="cypress/support/component.ts"
+/>
+
+Una vez seleccionado el navegador, podemos crear las pruebas unitarias que deseemos mediante la selección de New spec. Para ejecutar las pruebas unitarias con Cypress, debemos ejecutar el archivo de pruebas (spec) creado haciendo clic en él en la ventana de Cypress.
+
+## 4. Uso de Cypress para la ejecución de pruebas E2E
+
+Además de las pruebas unitarias, Cypress también permite la realización de pruebas E2E. Puesto que ya hemos instalado Cypress para la realización de pruebas unitarias, no es necesario realizar una nueva instalación para la ejecución de pruebas E2E. El siguiente paso es volver a ejecutar la herramienta con el siguiente comando:
+
+```bash
+npx cypress open
+```
+
+En la ventana de configuración que se abre, ahora seleccionaremos la opción E2E testing. Se nos mostrará una lista de los archivos de configuración de Cypress que existen en el proyecto. Seleccionamos Continue y en la siguiente ventana podemos seleccionar el navegador en el que se ejecutarán las pruebas. Una vez seleccionado, podemos crear las pruebas E2E que deseemos.
+
+Para poder ejecutar las pruebas de la aplicación Ionic con Cypress, debemos establecer la URL base de la aplicación en el archivo `cypress.config.ts`:
+
+<Aside type="note">
+
+La configuración E2E ya incluye `baseUrl: 'http://localhost:8100'` como se mostró anteriormente.
+
+</Aside>
+
+## 5. Tests implementados
+
+A continuación se enumerate los tests implementados en la aplicación:
+
+### 5.1. Tests con Jasmine (Karma)
+
+- Tests del servicio GenerateTextService
+- Tests del componente HomePage
+
+### 5.2. Tests con Cypress Component Testing
+
+<RemoteCode
+  url={`${REPO_URL}cypress/component/clients.cy.ts`}
+  lang="typescript"
+  title="cypress/component/clients.cy.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}cypress/component/products.cy.ts`}
+  lang="typescript"
+  title="cypress/component/products.cy.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}cypress/component/reservations.cy.ts`}
+  lang="typescript"
+  title="cypress/component/reservations.cy.ts"
+/>
+
+<RemoteCode
+  url={`${REPO_URL}cypress/component/tabs.cy.ts`}
+  lang="typescript"
+  title="cypress/component/tabs.cy.ts"
+/>
+
+### 5.3. Tests E2E con Cypress
+
+<RemoteCode
+  url={`${REPO_URL}cypress/e2e/actividad5.cy.ts`}
+  lang="typescript"
+  title="cypress/e2e/actividad5.cy.ts"
+/>
+
+<Aside type="note">
+
+Los tests E2E verifican:
+- Acceso al detalle de cliente y显示 del ID
+- Botón atrás desde detalle de cliente
+- Acceso a crear reserva
+- Botón de cerrar sesión que redirige a login
+
+</Aside>
+
+## 6. Ejecución del proyecto
+
+<Steps>
+
+1. Instalar dependencias
+
+   ```bash
+   npm install
+   ```
+
+2. Ejecutar pruebas unitarias con Jasmine/Karma
+
+   ```bash
+   npm test
+   ```
+
+3. Ejecutar Cypress para pruebas de componentes
+
+   ```bash
+   npx cypress open
+   ```
+
+   Seleccionar "Component Testing" y elegir el navegador.
+
+4. Ejecutar Cypress para pruebas E2E
+
+   ```bash
+   npx cypress open
+   ```
+
+   Seleccionar "E2E Testing" y elegir el navegador.
+
+5. La aplicación se abrirá en `http://localhost:8100` para pruebas E2E.
+
+</Steps>
+
+<Aside type="note">
+
+Para ejecutar las pruebas E2E, la aplicación debe estar en ejecución:
+```bash
+ionic serve
+```
+
+</Aside>
