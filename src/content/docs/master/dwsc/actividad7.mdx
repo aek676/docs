@@ -161,17 +161,22 @@ Utiliza las dependencias de Spring Boot:
 
 ### 4.1. Registro en Eureka
 
-Este microservicio está configurado para registrarse en Eureka Server mediante:
-
-- **Tag:** `@EnableDiscoveryClient` (en la clase Application)
-- **Configuración:** YAML con `eureka.client.service-url.defaultZone`
+Este microservicio está configurado para registrarse en Eureka Server mediante la configuración YAML.
 
 <RemoteCode
   url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/OmdbServiceApplication.java`}
   lang="java"
   title="OmdbServiceApplication.java"
-  mark={["@EnableDiscoveryClient"]}
+  mark={["@EnableFeignClients"]}
 />
+
+<Aside type="note">
+
+`@EnableDiscoveryClient` ya no es necesario. Se puede implementar un DiscoveryClient en el classpath para causar que la aplicación Spring Boot se registre con el servidor de descubrimiento de servicios.
+
+**Fuente:** [Spring Cloud Commons](https://docs.spring.io/spring-cloud-commons/reference/spring-cloud-commons/common-abstractions.html)
+
+</Aside>
 
 ### 4.2. Feign Client
 
@@ -245,17 +250,22 @@ Utiliza las dependencias de Spring Boot:
 
 ### 5.1. Registro en Eureka
 
-Este microservicio está configurado para registrarse en Eureka Server mediante:
-
-- **Tag:** `@EnableDiscoveryClient` (en la clase Application)
-- **Configuración:** YAML con `eureka.client.service-url.defaultZone`
+Este microservicio está configurado para registrarse en Eureka Server mediante la configuración YAML.
 
 <RemoteCode
   url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/TmdServiceApplication.java`}
   lang="java"
   title="TmdServiceApplication.java"
-  mark={["@EnableDiscoveryClient"]}
+  mark={["@EnableFeignClients"]}
 />
+
+<Aside type="note">
+
+`@EnableDiscoveryClient` ya no es necesario. Se puede implementar un DiscoveryClient en el classpath para causar que la aplicación Spring Boot se registre con el servidor de descubrimiento de servicios.
+
+**Fuente:** [Spring Cloud Commons](https://docs.spring.io/spring-cloud-commons/reference/spring-cloud-commons/common-abstractions.html)
+
+</Aside>
 
 ### 5.2. Feign Client
 
