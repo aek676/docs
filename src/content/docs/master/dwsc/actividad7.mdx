@@ -530,3 +530,64 @@ Y se pushan a GHCR con etiquetas:
    - Gateway: [`http://localhost:8080/movies-manager/movie?title=inception`](http://localhost:8080/movies-manager/movie?title=inception)
 
 </Steps>
+
+## 10. Pruebas de Tolerancia a Fallos
+
+El sistema de microservicios implementa un patrón de tolerancia a fallos mediante `CompletableFuture.anyOf()` en el movies-manager. Este patrón permite:
+
+- Llamar a ambos servicios (omdb-service y tmdb-service) en paralelo
+- Aceptar la primera respuesta exitosa
+- Timeout de 3 segundos si ninguno responde
+
+### 10.1. Pruebas Realizadas
+
+Se ejecutaron 3 pruebas para verificar el comportamiento del sistema ante fallos de los microservicios:
+
+| Prueba | omdb-service | tmdb-service | Resultado Esperado |
+| ------ | ------------ | ------------- | ----------------- |
+| 1      | Activo       | Activo         | Movie can be inserted |
+| 2     | Activo       | Detenido      | Movie can be inserted |
+| 3     | Detenido    | Detenido      | Movie cannot be inserted |
+
+### 10.2. Proceso de Ejecución
+
+El proceso de ejecución de las pruebas fue el siguiente:
+
+**Prueba 1: Ambos microservicios activos**
+
+```bash
+docker-compose up -d
+curl -X POST "http://localhost:8080/movies-manager/movie?title=Inception"
+```
+
+Resultado: `Movie can be inserted` ✅
+
+**Prueba 2: Simular caída de tmdb-service**
+
+```bash
+docker-compose stop tmdb-service
+curl -X POST "http://localhost:8080/movies-manager/movie?title=Inception"
+```
+
+Resultado: `Movie can be inserted` ✅
+
+**Prueba 3: Ambos microservicios caídos**
+
+```bash
+docker-compose stop omdb-service
+curl -X POST "http://localhost:8080/movies-manager/movie?title=Inception"
+```
+
+Resultado: `Movie cannot be inserted` ✅
+
+### 10.3. Conclusiones
+
+Las pruebas demuestran que:
+
+1. **Tolerancia a fallos verificada**: El sistema funciona correctamente cuando al menos un microservicio está disponible.
+
+2. **Fallback automático**: Cuando tmdb-service cayó, omdb-service asumió automáticamente la respuesta.
+
+3. **Manejo de errores**: Cuando ambos servicios cayeron, el sistema retornó el error apropiado.
+
+El patrón `CompletableFuture.anyOf()` implementado en MovieServiceImpl es efectivo para este escenario de alta disponibilidad.
