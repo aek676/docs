@@ -1,0 +1,522 @@
+---
+title: Actividad 7 - Microservicios con OpenFeign, Eureka y Gateway
+description: Implementación de microservicios Spring Boot con OpenFeign para agregación, Eureka para descubrimiento y Gateway para enrutamiento
+---
+
+import { Steps, Aside } from "@astrojs/starlight/components";
+import RemoteCode from "@/components/RemoteCode.astro";
+
+export const raw = `https://raw.githubusercontent.com/aek676/dwsc-2026/main/actividad7/`;
+
+El objetivo de esta actividad es desarrollar una arquitectura de microservicios que:
+
+- Implemente dos servicios independientes (OMDB y TMDB) para buscar películas utilizando sus APIs externas
+- Agregue los servicios mediante OpenFeign en un movies-manager
+- Utilice Eureka Server para el descubrimiento de servicios
+- Configure Spring Cloud Gateway como punto de entrada único
+
+## 1. Arquitectura del Proyecto
+
+El proyecto está formado por los siguientes componentes:
+
+```d2 sketch
+direction: down
+
+infraestructura: {
+  eureka: Eureka Server {
+    shape: cylinder
+  }
+
+  gateway: Spring Cloud Gateway {
+    shape: hexagon
+  }
+}
+
+microservicios: {
+  manager: Movies Manager
+  omdb_service: OMDB Service
+  tmdb_service: TMDB Service
+}
+
+apis_externas: {
+  omdb: API OMDB {
+    shape: cloud
+  }
+
+  tmdb: API TMDB {
+    shape: cloud
+  }
+}
+
+usuario: {
+  shape: person
+  width: 130
+}
+
+# --- Flujo de la Petición Principal ---
+usuario -> infraestructura.gateway: Petición HTTP
+infraestructura.gateway -> microservicios.manager: Ruteo
+
+microservicios.manager -> microservicios.omdb_service: OpenFeign
+microservicios.manager -> microservicios.tmdb_service: OpenFeign
+
+microservicios.omdb_service -> apis_externas.omdb: REST
+microservicios.tmdb_service -> apis_externas.tmdb: REST
+
+# --- Flujo de Descubrimiento de Servicios ---
+# Utilizando stroke-dash como en la documentación para diferenciar estas líneas
+
+infraestructura.gateway -> infraestructura.eureka: Discovery {
+  style.stroke-dash: 5
+}
+
+microservicios.manager -> infraestructura.eureka: Discovery {
+  style.stroke-dash: 5
+}
+
+microservicios.omdb_service -> infraestructura.eureka: Discovery {
+  style.stroke-dash: 5
+}
+
+microservicios.tmdb_service -> infraestructura.eureka: Discovery {
+  style.stroke-dash: 5
+}
+```
+
+<Aside type="note">
+
+La arquitectura sigue el patrón de arquitectura de microservicios donde:
+
+- **Eureka Server** permite el descubrimiento dinámico de servicios
+- **OMDB** y **TMDB** son servicios independientes que consultan APIs externas
+- **Movies Manager** agrega las respuestas de ambos servicios mediante Feign
+- **Gateway** actúa como punto de entrada único para todas las peticiones
+
+</Aside>
+
+## 2. Docker Compose
+
+Se utiliza Docker Compose para levantar todos los microservicios:
+
+<RemoteCode
+  url={`${raw}docker-compose.yml`}
+  lang="yaml"
+  title="docker-compose.yml"
+/>
+
+<Aside type="note">
+
+Las imágenes se descargan desde GitHub Container Registry (GHCR):
+
+- `ghcr.io/aek676/eureka-server:latest`
+- `ghcr.io/aek676/omdb-service:latest`
+- `ghcr.io/aek676/tmdb-service:latest`
+- `ghcr.io/aek676/movies-manager:latest`
+- `ghcr.io/aek676/gateway:latest`
+
+Las variables de entorno `OMDB_API_KEY` y `TMDB_API_KEY` deben configurarse en un archivo `.env`.
+
+</Aside>
+
+## 3. Eureka Server
+
+El servidor de Eureka permite el descubrimiento de servicios dinámicamente.
+Utiliza las dependencias de Spring Boot:
+
+- `spring-cloud-starter-netflix-eureka-server`: Servidor Eureka (descubrimiento)
+
+### 3.1. Aplicación principal
+
+<RemoteCode
+  url={`${raw}eureka-server/src/main/java/es/ual/eureka/server/EurekaServerApplication.java`}
+  lang="java"
+  title="EurekaServerApplication.java"
+  mark={["@EnableEurekaServer"]}
+/>
+
+### 3.2. Configuración
+
+<RemoteCode
+  url={`${raw}eureka-server/src/main/resources/application.yaml`}
+  lang="yaml"
+  title="application.yaml"
+/>
+
+### 3.3. Endpoints
+
+| Endpoint                             | Descripción         |
+| ------------------------------------ | ------------------- |
+| `http://localhost:8761/`             | Dashboard de Eureka |
+| `http://localhost:8761/eureka/start` | API de Eureka       |
+
+## 4. OMDb Service
+
+Este microservicio consulta la API de OMDb (Open Movie Database).
+Utiliza las dependencias de Spring Boot:
+
+- `spring-boot-starter-actuator`: Monitorización
+- `spring-boot-starter-webmvc`: REST controllers
+- `spring-cloud-starter-netflix-eureka-client`: Registro en Eureka
+- `spring-cloud-starter-openfeign`: Cliente Feign
+
+### 4.1. Registro en Eureka
+
+Este microservicio está configurado para registrarse en Eureka Server mediante:
+
+- **Tag:** `@EnableDiscoveryClient` (en la clase Application)
+- **Configuración:** YAML con `eureka.client.service-url.defaultZone`
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/OmdbServiceApplication.java`}
+  lang="java"
+  title="OmdbServiceApplication.java"
+  mark={["@EnableDiscoveryClient"]}
+/>
+
+### 4.2. Feign Client
+
+Cliente Feign para conectar con la API de OMDb:
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/client/OmdbClient.java`}
+  lang="java"
+  title="OmdbClient.java"
+/>
+
+### 4.3. Servicio
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/service/OmdbService.java`}
+  lang="java"
+  title="OmdbService.java"
+/>
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/service/OmdbServiceImpl.java`}
+  lang="java"
+  title="OmdbServiceImpl.java"
+/>
+
+### 4.4. Controlador
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/controller/MovieController.java`}
+  lang="java"
+  title="MovieController.java"
+/>
+
+### 4.5. Manejo de excepciones
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/exception/MovieNotFoundException.java`}
+  lang="java"
+  title="MovieNotFoundException.java"
+/>
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/java/es/ual/eureka/client/omdb/exception/GlobalExceptionHandler.java`}
+  lang="java"
+  title="GlobalExceptionHandler.java"
+/>
+
+### 4.6. Configuración
+
+<RemoteCode
+  url={`${raw}omdb-service/src/main/resources/application.yaml`}
+  lang="yaml"
+  title="application.yaml"
+/>
+
+### 4.7. Endpoints
+
+| Método | Endpoint      | Descripción                |
+| ------ | ------------- | -------------------------- |
+| GET    | /movie?title= | Buscar película por título |
+
+## 5. TMDB Service
+
+Este microservicio consulta la API de TMDB (The Movie Database).
+Utiliza las dependencias de Spring Boot:
+
+- `spring-boot-starter-actuator`: Monitorización
+- `spring-boot-starter-webmvc`: REST controllers
+- `spring-cloud-starter-netflix-eureka-client`: Registro en Eureka
+- `spring-cloud-starter-openfeign`: Cliente Feign
+
+### 5.1. Registro en Eureka
+
+Este microservicio está configurado para registrarse en Eureka Server mediante:
+
+- **Tag:** `@EnableDiscoveryClient` (en la clase Application)
+- **Configuración:** YAML con `eureka.client.service-url.defaultZone`
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/TmdServiceApplication.java`}
+  lang="java"
+  title="TmdServiceApplication.java"
+  mark={["@EnableDiscoveryClient"]}
+/>
+
+### 5.2. Feign Client
+
+Cliente Feign para conectar con la API de TMDB:
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/client/TmdClient.java`}
+  lang="java"
+  title="TmdClient.java"
+/>
+
+### 5.3. Servicio
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/service/TmdService.java`}
+  lang="java"
+  title="TmdService.java"
+/>
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/service/TmdServiceImpl.java`}
+  lang="java"
+  title="TmdServiceImpl.java"
+/>
+
+### 5.4. Controlador
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/controller/MovieController.java`}
+  lang="java"
+  title="MovieController.java"
+/>
+
+### 5.5. Manejo de excepciones
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/exception/MovieNotFoundException.java`}
+  lang="java"
+  title="MovieNotFoundException.java"
+/>
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/java/es/ual/eureka/client/tmdb/exception/GlobalExceptionHandler.java`}
+  lang="java"
+  title="GlobalExceptionHandler.java"
+/>
+
+### 5.6. Configuración
+
+<RemoteCode
+  url={`${raw}tmdb-service/src/main/resources/application.yaml`}
+  lang="yaml"
+  title="application.yaml"
+/>
+
+### 5.7. Endpoints
+
+| Método | Endpoint      | Descripción                |
+| ------ | ------------- | -------------------------- |
+| GET    | /movie?title= | Buscar película por título |
+
+## 6. Movies Manager (Agregador)
+
+Este microservicio agrega las respuestas de omdb-service y tmdb-service mediante Feign.
+Utiliza las dependencias de Spring Boot:
+
+- `spring-boot-starter-actuator`: Monitorización
+- `spring-boot-starter-webmvc`: REST controllers
+- `spring-cloud-starter-netflix-eureka-client`: Registro en Eureka
+- `spring-cloud-starter-openfeign`: Cliente Feign
+
+### 6.1. Registro en Eureka
+
+Este microservicio está configurado para registrarse en Eureka Server mediante:
+
+- **Tag:** `@EnableDiscoveryClient` (en la clase Application)
+- **Configuración:** YAML con `eureka.client.service-url.defaultZone`
+
+<RemoteCode
+  url={`${raw}movies-manager/src/main/java/es/ual/eureka/client/movies_manager/MoviesManagerApplication.java`}
+  lang="java"
+  title="MoviesManagerApplication.java"
+  mark={["@EnableDiscoveryClient"]}
+/>
+
+### 6.2. Feign Clients
+
+<RemoteCode
+  url={`${raw}movies-manager/src/main/java/es/ual/eureka/client/movies_manager/client/OmdbClient.java`}
+  lang="java"
+  title="OmdbClient.java"
+/>
+
+<RemoteCode
+  url={`${raw}movies-manager/src/main/java/es/ual/eureka/client/movies_manager/client/TmdClient.java`}
+  lang="java"
+  title="TmdClient.java"
+/>
+
+### 6.3. Servicio
+
+<RemoteCode
+  url={`${raw}movies-manager/src/main/java/es/ual/eureka/client/movies_manager/service/MovieService.java`}
+  lang="java"
+  title="MovieService.java"
+/>
+
+<RemoteCode
+  url={`${raw}movies-manager/src/main/java/es/ual/eureka/client/movies_manager/service/MovieServiceImpl.java`}
+  lang="java"
+  title="MovieServiceImpl.java"
+/>
+
+### 6.4. Controlador
+
+<RemoteCode
+  url={`${raw}movies-manager/src/main/java/es/ual/eureka/client/movies_manager/controller/MovieController.java`}
+  lang="java"
+  title="MovieController.java"
+/>
+
+### 6.5. Configuración
+
+<RemoteCode
+  url={`${raw}movies-manager/src/main/resources/application.yaml`}
+  lang="yaml"
+  title="application.yaml"
+/>
+
+### 6.6. Endpoints
+
+| Método | Endpoint      | Descripción                         |
+| ------ | ------------- | ----------------------------------- |
+| POST   | /movie?title= | Buscar películas en ambos servicios |
+
+## 7. Gateway
+
+Spring Cloud Gateway actúa como punto de entrada único para todas las peticiones.
+Utiliza las dependencias de Spring Boot:
+
+- `spring-boot-starter-actuator`: Monitorización
+- `spring-cloud-starter-gateway-server-webflux`: Gateway
+- `spring-cloud-starter-netflix-eureka-client`: Registro en Eureka
+
+### 7.1. Registro en Eureka
+
+Este microservicio está configurado para registrarse en Eureka Server mediante:
+
+- **Tag:** `@EnableDiscoveryClient` (en la clase Application)
+- **Configuración:** YAML con `eureka.client.service-url.defaultZone`
+
+<RemoteCode
+  url={`${raw}gateway/src/main/java/es/ual/gateway/GatewayApplication.java`}
+  lang="java"
+  title="GatewayApplication.java"
+  mark={["@EnableDiscoveryClient"]}
+/>
+
+### 7.2. Aplicación principal
+
+<RemoteCode
+  url={`${raw}gateway/src/main/java/es/ual/gateway/GatewayApplication.java`}
+  lang="java"
+  title="GatewayApplication.java"
+/>
+
+### 7.3. Configuración
+
+<RemoteCode
+  url={`${raw}gateway/src/main/resources/application.yaml`}
+  lang="yaml"
+  title="application.yaml"
+/>
+
+<Aside type="note">
+
+El Gateway enruta las peticiones:
+
+- `/omdb-service/**` → omdb-service
+- `/tmdb-service/**` → tmdb-service
+- `/movies-manager/**` → movies-manager
+
+</Aside>
+
+### 7.4. Endpoints
+
+| Método | Endpoint                     | Descripción                          |
+| ------ | ---------------------------- | ------------------------------------ |
+| GET    | /omdb-service/movie?title=   | Buscar película (via omdb-service)   |
+| GET    | /tmdb-service/movie?title=   | Buscar película (via tmdb-service)   |
+| POST   | /movies-manager/movie?title= | Buscar película (via movies-manager) |
+
+## 8. CI/CD con GitHub Actions
+
+Se utiliza GitHub Actions para construir y pushar las imágenes a GitHub Container Registry.
+
+<RemoteCode
+  url={`${raw}../.github/workflows/docker-build.yml`}
+  lang="yaml"
+  title=".github/workflows/docker-build.yml"
+/>
+
+<Aside type="note">
+
+El workflow se ejecuta cuando se hace push a la rama main y cambia en `actividad7/**`.
+
+Las imágenes se construyen con:
+
+```bash
+./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/aek676/[servicio]:${{ github.sha }}
+```
+
+Y se pushan a GHCR con etiquetas:
+
+- `ghcr.io/aek676/[servicio]:latest`
+- `ghcr.io/aek676/[servicio]:${{ github.sha }}`
+
+</Aside>
+
+## 9. Ejecución del proyecto
+
+<Steps>
+
+1. **Generar las imágenes Docker**
+
+   Para cada microservicio, generar la imagen:
+
+   ```bash
+   cd eureka-server
+   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/aek676/eureka-server:latest
+
+   cd omdb-service
+   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/aek676/omdb-service:latest
+
+   cd tmdb-service
+   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/aek676/tmdb-service:latest
+
+   cd movies-manager
+   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/aek676/movies-manager:latest
+
+   cd gateway
+   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/aek676/gateway:latest
+   ```
+
+2. **Crear archivo .env**
+
+   Crear un archivo `.env` con las claves de API:
+
+   ```env
+   OMDB_API_KEY=tu_api_key_de_omdb
+   TMDB_API_KEY=tu_api_key_de_tmdb
+   ```
+
+3. **Ejecutar con Docker Compose**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Verificar los servicios**
+   - Eureka Server: [`http://localhost:8761/`](http://localhost:8761/)
+   - Gateway: [`http://localhost:8080/movies-manager/movie?title=inception`](http://localhost:8080/movies-manager/movie?title=inception)
+
+</Steps>
